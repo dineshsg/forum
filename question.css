@@ -1,0 +1,64 @@
+.question-img{
+    height:25px;
+    width:30px;
+    margin: 0 6px 0 0;
+    background: 5.3% 1% url('img/jive-icon-sprites-big.png'), 
+    -moz-linear-gradient(bottom, #ffffff, #ffffff);
+
+    background: 5.3% 1% no-repeat url('img/jive-icon-sprites-big.png'), 
+    -webkit-linear-gradient(bottom, #ffffff, #ffffff);
+
+    background: right no-repeat url('img/jive-icon-sprites-big.png'), 
+    linear-gradient(bottom, #ffffff, #ffffff);
+    border-top-width: 120px;
+    padding-top: 2px;
+    padding-top: 2px;
+    border-right-width: 0px;
+    border-bottom-width: 59px;
+    padding-left: 30px;
+    padding-bottom: 8px;
+
+}
+.nothing
+{
+   border-collapse:collapse !important;
+   border-style : none;
+}
+
+#primary td
+{
+    border-right: none !important;
+    border-left: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+}
+#primary table
+{
+    border-style:none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+.img
+{
+    width:18px;
+}
+.algn-right
+{
+    text-align:right;
+}
+.small-font{
+    font-size:10px !important;
+}
+.divider{
+    border: 1px solid #efefef;
+}
+.color{
+    background-color: #efefef;
+    padding: 5px;
+}
+.position-right{
+    text-align:right;
+}
+.space{
+    padding-left:9%;
+}

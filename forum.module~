@@ -1,0 +1,195 @@
+<?php
+
+	function forum_menu(){
+
+        $items['forums'] = array(
+		    'title' => 'Forums',
+		    'page callback' => array('forum'),
+		    #'access arguments' => array('administer list grades'),
+		    'access callback' => TRUE,
+		    'file' => 'forum.inc',
+	    );
+	    
+	    $items['get_subject'] = array(
+		    'title' => '',
+		    'page callback' => array('get_subject'),
+		    #'access arguments' => array('administer list grades'),
+		    'access callback' => TRUE,
+	    );
+        
+        $items['ask-a-question'] = array(
+		    'title' => 'Ask A Question',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('ask_a_question_form'),
+		    'access arguments' => array('ask a question'),
+		    'access callback' => TRUE,
+		    'file' => 'question.inc',
+	    );
+
+        /*$items['forum'] = array(
+		    'title' => 'Question',
+		    'page callback' => array('forum'),
+		    #'access arguments' => array('ask a question'),
+		    'access callback' => TRUE,
+		    'file' => 'question.inc',
+	    );*/
+
+        $items['forum/questions'] = array(
+		    'title' => 'List Of All Questions',
+		    'page callback' => array('_forum_question'),
+		    #'access arguments' => array('ask a question'),
+		    'access callback' => TRUE,
+		    'file' => 'question.inc',
+	    );
+
+        $items['forum/question-detail'] = array(
+		    'title' => 'Question',
+		    'page callback' => array('_question'),
+		    'access arguments' => array('Ask A Question'),
+		    'access callback' => TRUE,
+		    'file' => 'question.inc',
+	    );
+        
+        $items['forum/question-reply'] = array(
+		    'title' => 'Ask A Question',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('question_reply_form'),
+		    'access arguments' => array('Question Reply'),
+		    'access callback' => TRUE,
+		    'file' => 'question.inc',
+	    );
+
+        $items['forum/question/approval'] = array(
+            'title' => 'Questions Waiting For Approval',
+		    'page callback' => array('question_waiting_for_approval'),
+		    'access arguments' => array('Moderator Approval'),
+   		    'access callback' => TRUE,
+    	    'file' => 'approval.inc',
+        );
+        $items['admin/list_grades'] = array(
+		    'title' => 'List Grades',
+		    'page callback' => array('_list_grades'),
+		    'access arguments' => array('administer list grades'),
+		    'access callback' => TRUE,
+		    'file' => 'grade.inc',
+	    );
+
+        $items['admin/list_subjects'] = array(
+		    'title' => 'List Subjects',
+		    'page callback' => array('_list_subjects'),
+		    'access arguments' => array('administer list subjects'),
+		    'access callback' => TRUE,
+		    'file' => 'subjects.inc',
+	    );
+
+	    $items['list/grade/modify'] = array(
+		    'title' => 'Modify',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('grade_modify_form'),
+		    'access arguments' => array('Modify Grade for Forum'),
+		    'access callback' => TRUE,
+		    'file' => 'grade.inc',
+	    );
+	    
+	    $items['list/grade/delete'] = array(
+		    'title' => 'Delete',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('grade_delete_confirm'),
+		    'access arguments' => array('Delete Grade from forum'),
+		    'access callback' => TRUE,
+		    'file' => 'grade.inc',
+	    );
+	    $items['list/subject/modify'] = array(
+		    'title' => 'Modify',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('subject_modify_form'),
+		    'access arguments' => array('Modify Subject for Fourm'),
+		    'access callback' => TRUE,
+		    'file' => 'subjects.inc',
+	    );
+	    $items['list/subject/delete'] = array(
+		    'title' => 'Delete',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('subject_delete_confirm'),
+		    'access arguments' => array('Delete Subject from Forum'),
+		    'access callback' => TRUE,
+		    'file' => 'subjects.inc',
+	    );
+	    $items['forum/assign/teacher'] = array(
+		    'title' => 'Assign A Teacher',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('assign_teacher_form'),
+		    'access arguments' => array('Assign A Teacher'),
+		    'access callback' => TRUE,
+		    'file' => 'teacher.inc',
+	    );
+	return $items;
+	
+	}
+
+    function get_subject()
+    {
+        $existing_subject_name = '';
+        if(isset($_POST['grade']))
+        {
+            $result_query = db_query('SELECT subject_name,id,grade_id FROM forum_subjects WHERE grade_id = '.$_POST['grade'].' GROUP BY subject_name');
+            $existing_subject_name = array();
+            while($rows = $result_query->fetchObject()){
+                $existing_subject_name[] = $rows;
+            }
+        }
+        echo json_encode($existing_subject_name);
+        exit;   
+    }    
+        
+    	
+	function forum_permission(){
+	    return array(
+	        'administer list grades'=> array(
+                'title' => t('Administer Open Web Analytics')
+            ),
+            'Modify Grade for Forum'=> array(
+                'title' => t('Modify Grade for Forum')
+            ),
+            'Delete Grade from forum'=> array(
+                'title' => t('Delete Grade from forum')
+            ),
+            'Modify Subject for Fourm'=> array(
+                'title' => t('Modify Subject for Fourm')
+            ),
+            'Delete Subject from Forum'=> array(
+                'title' => t('Delete Subject from Forum')
+            ),
+            'Ask A Question'=> array(
+                'title' => t('Asking A Question on Forum')
+            ),
+            'Moderator Approval'=> array(
+                'title' => t('Questions Waiting For Moderator Approval')
+            ),
+            'Question Reply'=> array(
+                'title' => t('Reply To The Questions')
+            ),
+        );
+	}
+	
+	function forum_mail($key, &$message, $params)
+	{
+	    switch ($key) {
+            case 'askaquestion':
+              // Set headers etc
+                $message['subject'] = $params['subject'];
+                $message['body'] = $params['body'];              
+                break;
+            case 'replyaquestion':
+              // Set headers etc
+                $message['subject'] = $params['subject'];
+                $message['body'] = $params['body'];              
+                break;
+            }
+            
+	}
+	
+	function forum_init(){
+  	  drupal_add_css(drupal_get_path('module', 'forum') .'/question.css');
+	}
+?>

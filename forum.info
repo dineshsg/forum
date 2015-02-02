@@ -1,0 +1,6 @@
+name = Support Forum
+description = Support forum for the website where students can post any questions
+core = 7.x
+
+scripts[] = question.js
+scripts[] = jquery-migrate-1.0.0.js
