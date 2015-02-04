@@ -123,10 +123,40 @@
 		    'access callback' => TRUE,
 		    'file' => 'teacher.inc',
 	    );
+	    $items['admin/settings/extension'] = array(
+		    'title' => 'File Extension',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('extensions_allowed_form'),
+		    'access arguments' => array('Extensions allowed to upload Attachment'),
+		    'access callback' => TRUE,
+	    );
 	return $items;
 	
 	}
-
+    
+    function extensions_allowed_form($form_state)
+    {
+        $form['ext_allowed'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Specify file extensions allowed to upload as a attachment on FORUM.'),
+            '#description' => t('Provide file extensions with comma. For example: png, jpg, jpeg'),
+            '#size' => 100,
+            '#maxlength' => 255,
+            '#required' => TRUE,
+            '#default_value' => variable_get('exten_allowed', ''),
+        );
+        $form['submit'] = array(
+            '#type' => 'submit',
+            '#value' => t('Submit')
+        );
+        return $form;
+    }
+    
+    function extensions_allowed_form_submit($form, &$form_state)
+    {
+        variable_set('exten_allowed', $form_state['values']['ext_allowed']);
+        drupal_set_message(t('Settings updated'), 'status');
+    }
     function get_subject()
     {
         $existing_subject_name = '';
@@ -192,4 +222,89 @@
 	function forum_init(){
   	  drupal_add_css(drupal_get_path('module', 'forum') .'/question.css');
 	}
+	
+	function forum_form_alter(&$form,$form_state,$form_id)
+	{
+	    $user = arg(1);
+        $user_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user."'");
+        
+        while($query = $user_query->fetchObject()){
+        
+          if ($form_id === 'user_profile_form' ) 
+          { 
+                #$form['account']['mail']['#disabled'] = true;
+                $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
+                $grd_nm = $result_grade[0]->grade_name;
+                $grd_id = $result_grade[0]->id;
+                $option[''] = '----Select----';        
+                foreach ($result_grade as $node) {
+                    $option[$node->id] = $node->grade_name;
+                }
+                $form['fname'] = array(
+			        '#type' => 'textfield',
+			        '#size' => 30,
+			        '#title' => t('First Name'),
+			        '#required' => TRUE,
+			        '#value' => $query->fname,
+			        '#description' => "Please enter your First Name.",
+		        );
+		        $form['lname'] = array(
+			        '#type' => 'textfield',
+			        '#size' => 30,
+			        '#title' => t('Last Name'),
+			        '#required' => TRUE,
+			        '#value' => $query->lname,
+			        '#description' => "Please enter your Last Name.",
+		        );
+		        $form['mobile'] = array(
+			        '#type' => 'textfield',
+			        '#size' => 12,
+			        '#title' => t('Mobile No.'),
+			        '#required' => TRUE,
+			        '#value' => $query->mobile,
+			        '#description' => "Please enter your Mobile No.",
+			        '#attributes' => array('class' => array('mobile')),
+			        '#prefix' => '<div id="errmsg"></div>',
+			        
+		        );
+                $form['grade'] = array(
+                    '#title' => t('Grade'),
+                    '#type' => 'select',
+                    '#options' => $option,
+                    '#attributes' => array('class' => array('grade')),
+                    '#validated' => TRUE,
+                );
+                $form['subject'] = array(
+                    '#title' => t('Subject'),
+                    '#type' => 'select',
+                    '#multiple' => TRUE,
+                    '#options' => array(''=> '-- Select --'),
+                    '#attributes' => array('class' => array('subject')),
+                    '#validated' => TRUE
+                );
+            }
+                $form['#submit'][] = 'forum_form_alter_submit';
+                return $form;                
+          }
+    }
+    function forum_form_alter_submit(&$form,$form_state)
+    {
+        $selected_subjects = implode(",",$form_state['values']['subject']);
+        //print_r($selected_subjects);
+        //die;
+        $user = arg(1);
+        
+        //if ($form_id === 'user_profile_form' ) 
+        //{
+                $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$form_state['values']['fname']."', '".$form_state['values']['lname']."','".$form_state['values']['mobile']."', '".$form_state['values']['grade']."', '".$selected_subjects."')";
+                if(db_query($query))
+                {
+                    drupal_set_message('Stored successfully');
+                }
+                else
+                {
+                    drupal_set_message("Error");
+                }
+        //}
+    }
 ?>

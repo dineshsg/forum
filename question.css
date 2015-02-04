@@ -31,6 +31,7 @@
     border-left: none !important;
     border-top: none !important;
     border-bottom: none !important;
+    width:1% !important;
 }
 #primary table
 {
@@ -41,6 +42,10 @@
 .img
 {
     width:18px;
+}
+.user-name
+{
+    padding-top:23px !important;
 }
 .algn-right
 {
@@ -62,3 +67,25 @@
 .space{
     padding-left:9%;
 }
+<!--  winjit 2nd Feb 15  -->
+.grade, .grade1 {
+	width:24%;
+}
+.thumb {
+	width: 96%!important;
+	margin:2% !important;
+}
+@media screen and (min-width:500px) and (max-width:800px)   {
+.grade, .grade1{
+	width:49% !important;
+}
+
+}
+@media screen and (max-width:499px)  {
+.grade, .grade1{
+	width:98% !important;
+	height:150px !important;
+}
+
+}
+<!-- End  winjit 2nd Feb 15  -->

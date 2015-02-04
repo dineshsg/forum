@@ -26,13 +26,13 @@
             '#attributes' => array('class' => array('subject')),
             '#validated' => TRUE
         );
-        /*$form['file'] = array(
+        $form['file'] = array(
             '#type' => 'file',
             '#name' => 'files[]',
             '#title' => t('Attach Multiple Files'),
             '#description' => t('You are allow to upload jpg, jpeg, png and gif, 10MB Max Size'),
             '#attributes' => array('multiple' => 'multiple'),
-        );*/
+        );
         $form['question_desc'] = array(
           '#title' => t('Ask your Question'),
           '#type' => 'textarea',
@@ -44,74 +44,58 @@
         return $form;
 	}
 	
-	/*function ask_a_question_form_validate($form, &$form_state)
-	{
-        $num_files = count($_FILES['files']['name']);
-        $directory = 'var/www/html/iParent1/sites/default/attachment/'.$form_state['values']['grade'].'/'.$form_state['values']['subject'];
-        if(file_exists($directory) && is_dir($directory)) 
-        { 
-        }
-        else
-        {
-            if(mkdir($directory , 0777, true)) 
-            { 
-               echo "Directory has been created successfully..."; 
-            } 
-            else 
-            { 
-               echo "Failed to create directory..."; 
-
-            }
-        }
-        for ($i = 0; $i < $num_files; $i++) {
-            $file = file_save_upload($i, array(
-                'file_validate_is_image' => array(),
-                'file_validate_extensions' => array('png gif jpg jpeg'),
-            ));
-            if ($file) {
-                  //if ($file = file_move($file, '/sites/default/attachment/'.$form_state['values']['grade'].'/'.$form_state['values']['subject'])) {
-                  if(move_uploaded_file($_FILES['files']['tmp_name'][$i], $_SERVER['DOCUMENT_ROOT'].'/iParent1/sites/default/attachment/'.$form_state['values']['grade'].'/'.$form_state['values']['subject'])){
-                        //$form_state['values']['file'][$i] = $file;
-                  }
-                  else {
-                        form_set_error('file', t('Failed to write the uploaded file the site\'s file folder.'));
-                  }
-            }
-            else {
-                  form_set_error('file', t('No file was uploaded.'));
-            }
-      }
-	}*/
-	
 	function ask_a_question_form_submit($form, &$form_state)
 	{
 	    global $user;
-	    global $base_root;
-        $current_url = $base_root.request_uri();
-        
 	    $pre_text = escape($form_state['values']['question_desc']);
-        $query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$form_state['values']['question_desc']."', '".$user->uid."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
-        
-        if(db_query($query)){
+	    $query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text."', '".$user->uid."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
+	    if(db_query($query)){
 			drupal_set_message('New Question has been posted Successfully');
 		}else {
 			drupal_set_message('Error while posting a question , Please try again.');
 		}
-		
-		$to = "dineshsgaddi@gmail.com"; // to Teacher e-mail address
-        $from = "noreply@iparent.com"; // from site email address
-        $language = user_preferred_language($user);
- 
-        $subject = "A Question has been posted on the forum"; // subject of e-mail
-        $body = array('0'=>t("Following question has been posted on the forum <br> URL:'".$current_url."'")); //it might be any variable from the form eg. $form_state['values']['your_field']
- 
-        //params is the array passed to hook_mail function
-        $params = array(
-            'subject' => $subject,
-            'body' => $body,
-            );
-         
-        drupal_mail('forum', 'askaquestion', $to, $language, $params, $from);
+	    $last = db_query("SELECT MAX(id) as last FROM forum_questions");
+	    $last = $last->fetchObject();
+	    $last = $last->last;
+	    /*---------------------------------------------------------------------
+	     Code for attaching multiple files along with the question on the forum
+	    ----------------------------------------------------------------------*/
+	    $num_files = count($_FILES['files']['name']);
+        $file_name = $_FILES['files']['name'];
+        $directory = 'sites/default/attachment/'.$form_state['values']['grade'].'/'.$form_state['values']['subject'].'/'.$last;
+        $str = variable_get('exten_allowed', '');
+        $allowedExts = explode(",",$str);
+        
+        if(!file_exists($directory) && !is_dir($directory)) 
+        {
+            mkdir($directory , 0777, true);
+            chmod($directory,0777);
+        }
+
+	    foreach($_FILES['files']['name'] as $key => $name)
+        {
+            $tmp_name = $_FILES['files']['tmp_name'][$key];
+            $name = $_FILES['files']['name'][$key];
+            $tmp = explode(".", $name);
+            $extension=end($tmp);
+            $name="Attachment-".$key.".".$extension;
+            //if (($_FILES['files']['size'][$key] < 20000) && in_array($extension, $allowedExts))
+            if (in_array($extension, $allowedExts))
+            {
+                $moved = move_uploaded_file($tmp_name, $directory.'/'.$name);
+            }
+            else
+            {
+                drupal_set_message(t('Some file cannot be uploaded on the forum. Please contact the administrator of this site.'), 'error');
+            }
+            $path_name = $directory.'/'.$name;
+            $query = db_query("INSERT INTO `forum_question_attach` (`question_id`, `file_name` ,`file_type`) VALUES ('".$last."', '".$path_name."','".$_FILES['files']['type'][$key]."')");
+        }
+        
+	    
+        
+        //$query = "INSERT INTO `forum_question_attach` (`question_id`, `file_name` ,`file_type`) VALUES ('".$pre_text."', '".$path_name."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."')";
+        
 	}
 	
 	function forum()
@@ -145,14 +129,14 @@
 	       $user=user_load($rows->user_id);
            $username=$user->name;
            $norm_text = escape($rows->question);
-	       $output .= "<td><span><a href='/iParent1/forum/question-detail/".$rows->id."'>".substr($norm_text, 0, 100)."</a></span><div class='algn-right small-font'>".$date_ago."</div></td>";
+	       $output .= "<td><span><a href='/iParent/forum/question-detail/".$rows->id."'>".substr($norm_text, 0, 100)."</a></span><div class='algn-right small-font'>".$date_ago."</div></td>";
 	       $output .= "<td class='user-name algn-right'>by <span>".$username."</span></td></tr>";
        }
        $output .= '</table>';
        }
        else
 	   {
-	    $output .= "No questions have been posted.<a href='#'>Go Back to Forum</a>";
+	    $output .= "<div class='sub-title clear'>No questions have been posted.<a href='#'>Go Back to Forum</a></div>";
 	   }
 
 	   return $output;
@@ -170,7 +154,7 @@
         $question_reply = db_query('SELECT qr.reply_message, qr.id, qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.'');
         $output .= "<div>";
   	    while($rows = $question_detail->fetchObject()){
-  	    $output .= "<div style='float:left;'>
+  	   /* $output .= "<div class='col-12'><div style='float:left;'>
   	                <div>
   	                    <div class='divider color'>Grade</div>
   	                    <div class='divider'>".$rows->grade_name."</div>
@@ -179,33 +163,36 @@
   	                <div class='divider color'>Subject</div>
   	                <div class='divider'>".$rows->subject_name."</div>
   	                </div>
-  	                </div>";
+  	                </div>";*/
+		 $output .= "<div class='col-12'><div class='img_bg border_blue'><div class='space'>
+  	                <div class='font-100 custom_font2 content_down '>
+  	                    Grade :<label class='font_black font-300'> ".$rows->grade_name." </label> &nbsp; &nbsp;               
+  	                    Topic :<label class='font_black font-300'> ".$rows->subject_name." </label> 
+  	                </div></div>";
+  	    
         $date_ago = ago($rows->created);
 	    $user=user_load($rows->user_id);
         $username=$user->name;
-        $output .= "<div class='space'>
+        $output .= "<div class='space content-font'>
                         <div>
-                        <span>Posted By:</span><strong><span>".$username."</span></strong>
+                        	<span>Posted By:</span><strong><span>".$username."</span></strong>
                         </div>
                         <div>
-                        <span>Date - </span><strong><span>".date('F jS Y', strtotime($rows->created))."</span></strong>
-                        </div>";
-        $output .= "<div>
-                        <div>Question:</div>
-                        <div style='text-align:center;'><p style='text-indent: auto;'>".$rows->question."</p></div>
-                        <!--<div style='text-align:right;'></div>-->
-                    </div>
+                        	<span>Date - </span><strong><span>".date('F jS Y', strtotime($rows->created))."</span></strong>
                     </div>";
+        $output .= "<div class='content-font'>
+                        <div>Question:</div>
+                        <h5 class='font-300 font-black'><p style='text-indent: auto;'><strong>".$rows->question."</strong></p></h5></div></div>";
         }
-        $output .= "</div>";
-        
+    //    $output .= "</div>";
+       
         $form_question = drupal_get_form("question_reply_form", $question_id);
         
         if($question_reply->rowCount() > 0)
 	    {
             while($reply = $question_reply->fetchObject())
             {
-                $output .= "<div class='space'>
+                $output .= "<div class='space content-font'>
                             <div>
                             <span>Replied By:</span><strong><span>".$username."</span></strong>
                             </div>
@@ -213,14 +200,14 @@
                             <span>Date - </span><strong><span>".date('F jS Y', strtotime($reply->created))."</span></strong>
                             </div>";
                 $output .= "<div id='form_{$reply->id}' class='form-wrapper'>";
-                $output .= "<div>".nl2br($reply->reply_message)."</div>";
+                $output .= "<div>Answer:</div><h5 class='font-300 font-black'><strong>".$reply->reply_message."</strong></h5>";
                 $output .= "</div>";
                 $output .= "</div><br>";
             }
         }
         $output .= "<div class='space'>";
         $output .= drupal_render($form_question);
-        $output .= "</div>";
+        $output .= "</div></div></div>";
         return $output;
     }
     
@@ -258,23 +245,6 @@
 		}else {
 			drupal_set_message('Error while posting a commment , Please try again.');
 		}
-		
-		$get_teacher = db_query("SELECT u.name,u.mail FROM users u WHERE ques.id = '".$form_state["values"]["hidden"]."' AND ques.grade_id =  ");
-		
-		$to = "dineshsgaddi@gmail.com"; // to student e-mail address
-        $from = "noreply@iparent.com"; // from site email address
-        $language = user_preferred_language($user);
- 
-        $subject = "A reply has been posted on your question"; // subject of e-mail
-        $body = array('0'=>t("Following question has been replied on the forum <br> URL:'".$current_url."'")); //it might be any variable from the form eg. $form_state['values']['your_field']
- 
-        //params is the array passed to hook_mail function
-        $params = array(
-            'subject' => $subject,
-            'body' => $body,
-            );
-         
-        drupal_mail('forum', 'replyaquestion', $to, $language, $params, $from);
     }
     
     function ago($timestamp){
@@ -283,15 +253,15 @@
         return $text;    
     }
     function escape($value) {
-        /*$return = '';
-        for($i = 0; $i < strlen($value); ++$i) {
-            $char = $value[$i];
-            $ord = ord($char);
-            if($char !== "'" && $char !== "\"" && $char !== '\\' && $ord >= 32 && $ord <= 126)
-                $return .= $char;
-            else
-                $return .= '\\x' . dechex($ord);
-        }*/
-        return htmlspecialchars($value);
+    $return = '';
+    for($i = 0; $i < strlen($value); ++$i) {
+        $char = $value[$i];
+        $ord = ord($char);
+        if($char !== "'" && $char !== "\"" && $char !== '\\' && $ord >= 32 && $ord <= 126)
+            $return .= $char;
+        else
+            $return .= '\\x' . dechex($ord);
+    }
+    return $return;
     }
 ?>
