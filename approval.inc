@@ -42,35 +42,46 @@
                     List of questions which are waiting for moderators approval
                 --------------------------------------------------------------*/
         $output = '';
-        $question_query = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.status = 0 and ques.grade_id = grds.id and ques.subject_id = sub.id');
-        if(!$question_query->rowCount())
+        $row = array();
+        $header = array(
+                        array('data' => 'Subject Name', 'field' => 'subject_name', 'sort' => 'asc'),
+                        array('data' => 'Grade Name', 'field' => 'grade_name', 'sort' => 'asc'),
+                        array('data' => 'Question', 'field' => 'question', 'sort' => 'asc'),
+                        array('data' => 'Posted By', 'field' => 'user_id', 'sort' => 'asc'),
+                        array('data' =>'Action', 'field' => '', 'sort' => 'asc')
+                        );
+        $result = db_select('forum_questions','fq');
+        $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
+        $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
+        $result->fields('fs', array('subject_name'));
+        $result->fields('fg', array('grade_name'));
+        $result->fields('fq', array('question','user_id','created','id'));
+        $result->execute()
+               ->fetchAll();
+        $table_sort = $result->extend('TableSort')
+                    ->orderByHeader($header);
+        $pager = $table_sort->extend('PagerDefault')
+               ->orderBy('created', 'ASC')
+               ->limit(5);
+        $result = $pager->execute();
+        if(!$result->rowCount())
         {
             $output .= "No Questions for approval!!";
         }
         else
         {
-            $output .= "<table class='table table-striped'>";
-            $output .= "<th><td>Subject Name</td><td>Grade Name</td><td>Question</td><td>Posted By</td><td>Action</td></th>";
-      	    while($rows = $question_query->fetchObject()){
-	           $output .= "<tr><td class='img'><span class='question-img'></span></td>";
-	           $date_ago = ago($rows->created);
-	           $user=user_load($rows->user_id);
-               $username=$user->name;
-               $output .= "<td>".$rows->grade_name."</td>";
-               $output .= "<td>".$rows->subject_name."</td>";
-	           $output .= "<td><span><a href='#'>".$rows->question."</a></span><div class='algn-right small-font'>".$date_ago."</div></td>";
-	           $output .= "<td class='user-name'>by <span>".$username."</span></td>";
-	           $output .= "<td><a href='approval/".$rows->id."/1'>Accept</a> | <a href='approval/".$rows->id."/-1'>Reject</a></td></tr>";
+            while ($item = $result->fetch())
+            {
+                $user = user_load($item->user_id);
+                $username = $user->name;
+                $date_ago = ago($item->created);
+                $row[] = array($item->grade_name,$item->subject_name,$item->question,$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','approval/'.$item->id.'/1').' | '.l('Reject','approval/'.$item->id.'/-1'));
             }
-            $output .= '</table>';
+            $output .= theme('table',array('header' => $header,'rows' => $row));
+            $output .= theme('pager');
         }
 	    return $output;
 	    }
     }
     
-    function ago($timestamp){
-        $difference = time() - strtotime($timestamp);
-        $text = format_interval($difference, 1) . " ago";
-        return $text;    
-    }
 ?>

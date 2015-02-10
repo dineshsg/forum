@@ -21,7 +21,7 @@
 		    'title' => 'Ask A Question',
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('ask_a_question_form'),
-		    'access arguments' => array('ask a question'),
+		    'access arguments' => array('Ask A Question'),
 		    'access callback' => TRUE,
 		    'file' => 'question.inc',
 	    );
@@ -45,13 +45,13 @@
         $items['forum/question-detail'] = array(
 		    'title' => 'Question',
 		    'page callback' => array('_question'),
-		    'access arguments' => array('Ask A Question'),
+		    'access arguments' => array('Question Detail'),
 		    'access callback' => TRUE,
 		    'file' => 'question.inc',
 	    );
         
         $items['forum/question-reply'] = array(
-		    'title' => 'Ask A Question',
+		    'title' => 'Reply A Question',
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('question_reply_form'),
 		    'access arguments' => array('Question Reply'),
@@ -62,9 +62,17 @@
         $items['forum/question/approval'] = array(
             'title' => 'Questions Waiting For Approval',
 		    'page callback' => array('question_waiting_for_approval'),
-		    'access arguments' => array('Moderator Approval'),
+		    'access arguments' => array('Question Moderator Approval'),
    		    'access callback' => TRUE,
     	    'file' => 'approval.inc',
+        );
+        
+        $items['forum/comment/approval'] = array(
+            'title' => 'Comment Waiting For Approval',
+		    'page callback' => array('comment_waiting_for_approval'),
+		    'access arguments' => array('Comment Moderator Approval'),
+   		    'access callback' => TRUE,
+    	    'file' => 'comment_approval.inc',
         );
         $items['admin/list_grades'] = array(
 		    'title' => 'List Grades',
@@ -199,6 +207,9 @@
             'Question Reply'=> array(
                 'title' => t('Reply To The Questions')
             ),
+            'Question Detail'=>array(
+                'title' => t('Question Detail')
+            ),
         );
 	}
 	
@@ -227,12 +238,22 @@
 	{
 	    $user = arg(1);
         $user_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user."'");
-        
-        while($query = $user_query->fetchObject()){
+        if($user_query->rowCount() >0)
+        {
+            $query = $user_query->fetchObject();
+            $fname = $query->fname;
+            $lname = $query->lname;
+            $mobile = $query->mobile;
+        }
+        else
+        {
+            $fname = '';
+            $lname = '';
+            $mobile = '';
+        }
         
           if ($form_id === 'user_profile_form' ) 
           { 
-                #$form['account']['mail']['#disabled'] = true;
                 $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
                 $grd_nm = $result_grade[0]->grade_name;
                 $grd_id = $result_grade[0]->id;
@@ -245,7 +266,7 @@
 			        '#size' => 30,
 			        '#title' => t('First Name'),
 			        '#required' => TRUE,
-			        '#value' => $query->fname,
+			        '#value' => $fname,
 			        '#description' => "Please enter your First Name.",
 		        );
 		        $form['lname'] = array(
@@ -253,7 +274,7 @@
 			        '#size' => 30,
 			        '#title' => t('Last Name'),
 			        '#required' => TRUE,
-			        '#value' => $query->lname,
+			        '#value' => $lname,
 			        '#description' => "Please enter your Last Name.",
 		        );
 		        $form['mobile'] = array(
@@ -261,7 +282,7 @@
 			        '#size' => 12,
 			        '#title' => t('Mobile No.'),
 			        '#required' => TRUE,
-			        '#value' => $query->mobile,
+			        '#value' => $mobile,
 			        '#description' => "Please enter your Mobile No.",
 			        '#attributes' => array('class' => array('mobile')),
 			        '#prefix' => '<div id="errmsg"></div>',
@@ -285,26 +306,28 @@
             }
                 $form['#submit'][] = 'forum_form_alter_submit';
                 return $form;                
-          }
     }
     function forum_form_alter_submit(&$form,$form_state)
     {
-        $selected_subjects = implode(",",$form_state['values']['subject']);
-        //print_r($selected_subjects);
-        //die;
-        $user = arg(1);
-        
-        //if ($form_id === 'user_profile_form' ) 
-        //{
-                $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$form_state['values']['fname']."', '".$form_state['values']['lname']."','".$form_state['values']['mobile']."', '".$form_state['values']['grade']."', '".$selected_subjects."')";
-                if(db_query($query))
-                {
-                    drupal_set_message('Stored successfully');
-                }
-                else
-                {
-                    drupal_set_message("Error");
-                }
-        //}
+        if($form_state['values']['subject'])
+        {
+            $selected_subjects = implode(",",$form_state['values']['subject']);
+            $user = arg(1);
+            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$form_state['values']['fname']."', '".$form_state['values']['lname']."','".$form_state['values']['mobile']."', '".$form_state['values']['grade']."', '".$selected_subjects."')";
+            if(db_query($query))
+            {
+                drupal_set_message('Stored successfully');
+            }
+            else
+            {
+                drupal_set_message("Error");
+            }
+        }
     }
+    function ago($timestamp){
+        $difference = time() - strtotime($timestamp);
+        $text = format_interval($difference, 1) . " ago";
+        return $text;    
+    }
+
 ?>
