@@ -20,7 +20,7 @@
 
 		$form['subject_name'] = array(
 			'#type' => 'textfield',
-			'#title' => t('Add Subjects'),
+			'#title' => t('Add Topics'),
 			'#required' => TRUE,
 			'#description' => "Please add grades.",
 		);
@@ -54,8 +54,8 @@
         $output .= drupal_render($form);
         
         $header = array(
-            array('data'=>'Subject', 'field'=>'subject_name', 'sort'=>'asc'),
             array('data'=>'Grade', 'field'=>'grade_name', 'sort'=>'asc'),
+            array('data'=>'Topic', 'field'=>'subject_name', 'sort'=>'asc'),
 		    array('data'=>'User Name', 'field'=>'name'),
 		    array('data'=>'Operations', 'colspan' => 2),
     	);

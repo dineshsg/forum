@@ -2,7 +2,7 @@
 
     function forum()
     {
-        $output ="<div class='col-12'><a href='ask-a-question' class=''>Ask a question</a></div>";
+        $output ="<div class='col-12'><a href='ask-a-question' class='ctools-use-modal ctools-modal-forum-style'>Ask a question</a></div>";
         $query = 'SELECT DISTINCT fg.grade_name,fg.id FROM forum_grades fg, forum_subjects fs WHERE fg.id = fs.grade_id';
         $result = db_query($query);
         
@@ -67,7 +67,7 @@
             </div>
             </div>";			*/
 			$output .= "<div class='grade1 common' id= '".$row->id."' target='".$row->id."'>
-            <div class='thumb' style='box-shadow: 10px 10px 5px #888888;background-image:url(./images/grades/".$img.");'>
+            <div class='thumb' style='background-image:url(./images/grades/".$img.");'>
         	&nbsp; 
             </div><div class='caption content-font'>
         		".$row->grade_name."
@@ -84,7 +84,7 @@
             </div>
             </div>";*/
 		$output .= "<div class='grade1 common' id= '".$row->id."' target='".$row->id."'>
-            <div class='thumb' style='box-shadow: 10px 10px 5px #888888;background-image:url(./images/grades/".$img.");'> 
+            <div class='thumb' style='background-image:url(./images/grades/".$img.");'> 
         	&nbsp; 
             </div><div class='caption content-font'>
         		".$row->grade_name."

@@ -22,17 +22,15 @@
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('ask_a_question_form'),
 		    'access arguments' => array('Ask A Question'),
-		    'access callback' => TRUE,
 		    'file' => 'question.inc',
 	    );
 
-        /*$items['forum'] = array(
+        $items['forum_main'] = array(
 		    'title' => 'Question',
-		    'page callback' => array('forum'),
+		    'page callback' => 'drupal_get_form',
+    	    'page arguments' => array('forum_form'),
 		    #'access arguments' => array('ask a question'),
-		    'access callback' => TRUE,
-		    'file' => 'question.inc',
-	    );*/
+	    );
 
         $items['forum/questions'] = array(
 		    'title' => 'List Of All Questions',
@@ -43,10 +41,9 @@
 	    );
 
         $items['forum/question-detail'] = array(
-		    'title' => 'Question',
+		    'title' => 'Question Detail',
 		    'page callback' => array('_question'),
 		    'access arguments' => array('Question Detail'),
-		    'access callback' => TRUE,
 		    'file' => 'question.inc',
 	    );
         
@@ -55,7 +52,6 @@
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('question_reply_form'),
 		    'access arguments' => array('Question Reply'),
-		    'access callback' => TRUE,
 		    'file' => 'question.inc',
 	    );
 
@@ -63,7 +59,6 @@
             'title' => 'Questions Waiting For Approval',
 		    'page callback' => array('question_waiting_for_approval'),
 		    'access arguments' => array('Question Moderator Approval'),
-   		    'access callback' => TRUE,
     	    'file' => 'approval.inc',
         );
         
@@ -71,56 +66,49 @@
             'title' => 'Comment Waiting For Approval',
 		    'page callback' => array('comment_waiting_for_approval'),
 		    'access arguments' => array('Comment Moderator Approval'),
-   		    'access callback' => TRUE,
     	    'file' => 'comment_approval.inc',
         );
         $items['admin/list_grades'] = array(
 		    'title' => 'List Grades',
 		    'page callback' => array('_list_grades'),
 		    'access arguments' => array('administer list grades'),
-		    'access callback' => TRUE,
 		    'file' => 'grade.inc',
 	    );
 
         $items['admin/list_subjects'] = array(
-		    'title' => 'List Subjects',
+		    'title' => 'List Topics',
 		    'page callback' => array('_list_subjects'),
 		    'access arguments' => array('administer list subjects'),
-		    'access callback' => TRUE,
 		    'file' => 'subjects.inc',
 	    );
 
 	    $items['list/grade/modify'] = array(
-		    'title' => 'Modify',
+		    'title' => 'Modify Grades',
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('grade_modify_form'),
 		    'access arguments' => array('Modify Grade for Forum'),
-		    'access callback' => TRUE,
 		    'file' => 'grade.inc',
 	    );
 	    
 	    $items['list/grade/delete'] = array(
-		    'title' => 'Delete',
+		    'title' => 'Delete Grades',
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('grade_delete_confirm'),
 		    'access arguments' => array('Delete Grade from forum'),
-		    'access callback' => TRUE,
 		    'file' => 'grade.inc',
 	    );
 	    $items['list/subject/modify'] = array(
-		    'title' => 'Modify',
+		    'title' => 'Modify Topics',
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('subject_modify_form'),
 		    'access arguments' => array('Modify Subject for Fourm'),
-		    'access callback' => TRUE,
 		    'file' => 'subjects.inc',
 	    );
 	    $items['list/subject/delete'] = array(
-		    'title' => 'Delete',
+		    'title' => 'Delete Topics',
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('subject_delete_confirm'),
 		    'access arguments' => array('Delete Subject from Forum'),
-		    'access callback' => TRUE,
 		    'file' => 'subjects.inc',
 	    );
 	    $items['forum/assign/teacher'] = array(
@@ -128,7 +116,6 @@
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('assign_teacher_form'),
 		    'access arguments' => array('Assign A Teacher'),
-		    'access callback' => TRUE,
 		    'file' => 'teacher.inc',
 	    );
 	    $items['admin/settings/extension'] = array(
@@ -136,11 +123,15 @@
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('extensions_allowed_form'),
 		    'access arguments' => array('Extensions allowed to upload Attachment'),
-		    'access callback' => TRUE,
 	    );
 	return $items;
 	
 	}
+    
+    function forum_form()
+    {
+        
+    }
     
     function extensions_allowed_form($form_state)
     {
@@ -231,7 +222,14 @@
 	}
 	
 	function forum_init(){
-  	  drupal_add_css(drupal_get_path('module', 'forum') .'/question.css');
+  	  drupal_add_js(array(
+          'forum-style' => array(
+          'modalSize' => array('type' => 'fixed','width' => 850,'height' => 550,),
+          //Animation mode
+          'animation' => 'fadeIn',
+          ),
+      ), 'setting');
+      drupal_add_css(drupal_get_path('module', 'forum') .'/question.css');
 	}
 	
 	function forum_form_alter(&$form,$form_state,$form_id)
@@ -244,12 +242,13 @@
             $fname = $query->fname;
             $lname = $query->lname;
             $mobile = $query->mobile;
+            $grade = $query->grade;
         }
         else
         {
-            $fname = '';
-            $lname = '';
-            $mobile = '';
+            $fname = ' ';
+            $lname = ' ';
+            $mobile = ' ';
         }
         
           if ($form_id === 'user_profile_form' ) 
@@ -261,28 +260,28 @@
                 foreach ($result_grade as $node) {
                     $option[$node->id] = $node->grade_name;
                 }
-                $form['fname'] = array(
+                $form['tfname'] = array(
 			        '#type' => 'textfield',
 			        '#size' => 30,
 			        '#title' => t('First Name'),
 			        '#required' => TRUE,
-			        '#value' => $fname,
+			        '#default_value' => $fname,
 			        '#description' => "Please enter your First Name.",
 		        );
-		        $form['lname'] = array(
+		        $form['tlname'] = array(
 			        '#type' => 'textfield',
 			        '#size' => 30,
 			        '#title' => t('Last Name'),
 			        '#required' => TRUE,
-			        '#value' => $lname,
+			        '#default_value' => $lname,
 			        '#description' => "Please enter your Last Name.",
 		        );
-		        $form['mobile'] = array(
+		        $form['tmobile'] = array(
 			        '#type' => 'textfield',
 			        '#size' => 12,
 			        '#title' => t('Mobile No.'),
 			        '#required' => TRUE,
-			        '#value' => $mobile,
+			        '#default_value' => $mobile,
 			        '#description' => "Please enter your Mobile No.",
 			        '#attributes' => array('class' => array('mobile')),
 			        '#prefix' => '<div id="errmsg"></div>',
@@ -296,7 +295,7 @@
                     '#validated' => TRUE,
                 );
                 $form['subject'] = array(
-                    '#title' => t('Subject'),
+                    '#title' => t('Topic'),
                     '#type' => 'select',
                     '#multiple' => TRUE,
                     '#options' => array(''=> '-- Select --'),
@@ -307,13 +306,18 @@
                 $form['#submit'][] = 'forum_form_alter_submit';
                 return $form;                
     }
-    function forum_form_alter_submit(&$form,$form_state)
+    function forum_form_alter_submit($form_state,$form_id)
     {
+        if ($form_id === 'user_profile_form' ) 
+        {
+        $fname = $form_state['values']['tfname'];
+        $lname = $form_state['values']['tlname'];
+        $mobile = $form_state['values']['tmobile'];
         if($form_state['values']['subject'])
         {
             $selected_subjects = implode(",",$form_state['values']['subject']);
             $user = arg(1);
-            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$form_state['values']['fname']."', '".$form_state['values']['lname']."','".$form_state['values']['mobile']."', '".$form_state['values']['grade']."', '".$selected_subjects."')";
+            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['values']['grade']."', '".$selected_subjects."')";
             if(db_query($query))
             {
                 drupal_set_message('Stored successfully');
@@ -322,6 +326,7 @@
             {
                 drupal_set_message("Error");
             }
+        }
         }
     }
     function ago($timestamp){

@@ -25,7 +25,6 @@
    border-style : none;
 }
 
-/*
 #primary td
 {
     border-right: none !important;
@@ -34,20 +33,6 @@
     border-bottom: none !important;
 }
 #primary table
-{
-    border-style:none !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-}*/
-.table-striped td
-{
-    border-right: none !important;
-    border-left: none !important;
-    border-top: none !important;
-    border-bottom: none !important;
-    width:1% !important;
-}
-.table-striped 
 {
     border-style:none !important;
     margin-left: auto !important;
@@ -90,30 +75,17 @@
 	width:24%;
 }
 .thumb {
-	width: 79%!important;
-	margin:2% !important;	
-	background-repeat:no-repeat;
-	background-position:center;
-	border:#666666 thin;
+	width: 96%!important;
+	margin:2% !important;
 }
-
-
-.column1{
-	visibility:visible;
-	display:block;
-}
-.column2{
-	visibility:hidden;
-	display:none;
+.question-reply{
+    width:55% !important;
 }
 @media screen and (min-width:500px) and (max-width:800px)   {
 .grade, .grade1{
 	width:49% !important;
 }
 
-#edit-grade{
-	width:auto !important;
-}
 }
 @media screen and (max-width:499px)  {
 .grade, .grade1{
@@ -121,18 +93,5 @@
 	height:150px !important;
 }
 
-#edit-grade{
-	width:auto !important;
-	height:auto !important;
 }
-.column1{
-	visibility:hidden;
-	display:none;
-}
-.column2{
-	visibility:visible;
-	display:block;
-}
-}
-<!-- End  winjit 2nd Feb 15  -->
 <!-- End  winjit 2nd Feb 15  -->
