@@ -201,6 +201,9 @@
             'Question Detail'=>array(
                 'title' => t('Question Detail')
             ),
+            'Comment Moderator Approval'=>array(
+                'title' => t('Comment Moderator Approval')
+            ),
         );
 	}
 	
