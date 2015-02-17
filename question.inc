@@ -227,7 +227,7 @@
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$account->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
-                                if($teacher_query->rowCount() > 0)
+        if($teacher_query->rowCount() > 0)
         {
             $form_question = drupal_get_form("question_reply_form", $question_id);
         }

@@ -3,6 +3,8 @@
     function forum()
     {
         $output ="<div class='col-12'><a href='ask-a-question' class='ctools-use-modal ctools-modal-forum-style'>Ask a question</a></div>";
+        $search = drupal_get_form("forum_search");
+        $output .= "<span>".drupal_render($search)."</span>";
         $query = 'SELECT DISTINCT fg.grade_name,fg.id FROM forum_grades fg, forum_subjects fs WHERE fg.id = fs.grade_id';
         $result = db_query($query);
         
@@ -104,5 +106,24 @@
         $output .= "<div class='container_subjects' style='clear:both;background:#efefef;! important;width:96%;
 overflow:hidden;' id='container_subjects'  ></div>";//height:191px;  id='".$divid."'
         return $output;
+    }
+    
+    function forum_search($form, &$form_state)
+    {
+        $form = array();
+        $form['search'] = array(
+		    '#type' => 'textfield',
+		    '#size' => 30,
+		    '#required' => TRUE,
+		);
+		$form["submit"] = array(
+            '#type' => 'submit',
+            '#value' => "Search"
+        );
+        return $form;
+    }
+    function forum_search_submit($form, &$form_state)
+    {
+        
     }
 ?>

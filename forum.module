@@ -54,7 +54,13 @@
 		    'access arguments' => array('Question Reply'),
 		    'file' => 'question.inc',
 	    );
-
+        $items['forum/search'] = array(
+		    'title' => 'Reply A Question',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('forum_search'),
+		    'access callback' => TRUE,
+		    'file' => 'forum.inc',
+	    );
         $items['forum/question/approval'] = array(
             'title' => 'Questions Waiting For Approval',
 		    'page callback' => array('question_waiting_for_approval'),
