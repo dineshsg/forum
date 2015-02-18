@@ -118,12 +118,15 @@ overflow:hidden;' id='container_subjects'  ></div>";//height:191px;  id='".$divi
 		);
 		$form["submit"] = array(
             '#type' => 'submit',
-            '#value' => "Search"
+            '#value' => "Search",
+            ''
         );
         return $form;
     }
     function forum_search_submit($form, &$form_state)
     {
-        
+        $output = "##########################";
+        drupal_set_message('slkdjflksjd');     
+        return $output;   
     }
 ?>

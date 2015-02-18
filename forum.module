@@ -220,6 +220,7 @@
               // Set headers etc
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];              
+                $message['params']['attachments'][] = $params['attachment'];
                 break;
             case 'replyaquestion':
               // Set headers etc

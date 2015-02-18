@@ -11,6 +11,7 @@ jQuery(document).ready(function($) {
 			},
 			success : function(data){
 			    output = $.parseJSON(data);
+			    var html_data = "";
 			    var html_data = "<option val=''>-- Select --</option>";
 			    if(output){
 			        $.each($.parseJSON(data), function(idx, obj) {

@@ -21,13 +21,15 @@
             '#options' => $option,
             '#attributes' => array('class' => array('grade')),
             '#validated' => TRUE,
+            '#required' => TRUE,
         );
         $form['subject'] = array(
             '#title' => t('Topic'),
             '#type' => 'select',
             '#options' => array(''=> '-- Select --'),
             '#attributes' => array('class' => array('subject')),
-            '#validated' => TRUE
+            '#validated' => TRUE,
+            '#required' => TRUE,
         );
         $form['file'] = array(
             '#type' => 'file',
@@ -39,6 +41,7 @@
         $form['question_desc'] = array(
           '#title' => t('Ask your Question'),
           '#type' => 'textarea',
+          '#required' => TRUE,
         );
         $form['submit'] = array(
 			'#type' => 'submit',
@@ -51,6 +54,16 @@
             drupal_set_message('You need to login to post a question <a href="node/13">Login</a>');
         }
 	}
+
+    function ask_a_question_form_validate($from, $form_state)
+    {
+        if($form_state['values']['grade'] == '') { 
+            form_set_error('grade', t('Please select a Grade.')); 
+        }
+        if($form_state['values']['subject'] == '') { 
+            form_set_error('grade', t('Please select a Topic.')); 
+        } 
+    }
 	
 	function ask_a_question_form_submit($form, &$form_state)
 	{
@@ -69,8 +82,7 @@
 	    /*---------------------------------------------------------------------
 	     Code for attaching multiple files along with the question on the forum
 	    ----------------------------------------------------------------------*/
-        
-	    if (!empty($_FILES['files']['name'])) 
+	    if (!empty($_FILES['files']['tmp_name'][0])) 
 	    {
 	        $num_files = count($_FILES['files']['name']);
             $file_name = $_FILES['files']['name'];
@@ -96,12 +108,30 @@
                     $moved = move_uploaded_file($tmp_name, $directory.'/'.$name);
                 }
                 else{
-                    drupal_set_message(t('Some file cannot be uploaded on the forum. Please contact the administrator of this site.'), 'error');
+                        drupal_set_message(t('Some file cannot be uploaded on the forum. Please contact the administrator of this site.'), 'error');
                 }
                 $path_name = $directory.'/'.$name;
                 $query = db_query("INSERT INTO `forum_question_attach` (`question_id`, `file_name` ,`file_type`) VALUES ('".$last."', '".$path_name."','".$_FILES['files']['type'][$key]."')");
             }
         }
+        $header = "MIME-Version: 1.0\r\n";
+        
+        $filemime = file_get_mimetype($path_name);
+        $message = array('0'=>t('Dear Moderator,<br>A question has been posted on forums')); // Body of your email here.
+        $attachment = array(
+            'filecontent' => $directory,
+            'filename' => $name,// You can change the name and extension of the file         you need to send.
+            'filemime' => $filemime, 
+        );
+        $params = array(
+            'body' => $message,
+            'subject' => 'New Question Posted on Forum',
+            'headers'=> array('Content-Type' => 'text/html'),
+            'attachment' => $attachment,
+        );
+        $to = "dineshsgaddi@gmail.com";
+        $language = user_preferred_language($user);
+        drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 	}
 	
 	function forum()
@@ -306,6 +336,8 @@
             'subject' => 'Answer For Your Question Posted on Forum',
             'headers'=>'simple',
         );
+        
+        
         $to = "dineshsgaddi@gmail.com";
         $language = user_preferred_language($user);
         drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
