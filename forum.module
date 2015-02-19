@@ -212,6 +212,18 @@
             ),
         );
 	}
+
+function forum_mail_alter(&$message) {
+    $headers = array(
+        'MIME-Version' => '1.0',
+        'Content-Type' => 'text/html; charset=iso-8859-1; format=flowed',
+        'Content-Transfer-Encoding' => '8Bit',
+        'X-Mailer' => 'Drupal',
+    );
+    foreach ($headers as $key => $value) {
+        $message['headers'][$key] = $value;
+    }
+}
 	
 	function forum_mail($key, &$message, $params)
 	{
@@ -344,5 +356,30 @@
         $text = format_interval($difference, 1) . " ago";
         return $text;    
     }
-
+    
+    function grade($grade)
+    {
+        $grade_query = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grade)->fetchAll();
+        return $grade_query[0]->grade_name;
+    }
+    
+    function subject($subject)
+    {
+        $subject_query = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subject)->fetchAll();
+        return $subject_query[0]->subject_name;
+    }
+    
+    function role_mail($role, $grade, $subject)
+    {
+        $rid = array_search($role, user_roles());
+        $temp = array();
+        $mail_id = db_query("SELECT u.mail FROM users_roles as ur, users u, users_extend ue WHERE ur.rid = '".$rid."' AND ur.uid = u.uid AND ur.uid = ue.uid AND ue.grade = '".$grade."' AND FIND_IN_SET('".$subject."',ue.subject) > 0");
+        while($role_mail = $mail_id->fetchObject())
+        {
+            $temp[] = $role_mail->mail;
+            
+        }
+        $grp_mail = implode(",",$temp);
+        return $grp_mail;
+    }
 ?>

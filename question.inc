@@ -116,20 +116,36 @@
         }
         $header = "MIME-Version: 1.0\r\n";
         
-        $filemime = file_get_mimetype($path_name);
-        $message = array('0'=>t('Dear Moderator,<br>A question has been posted on forums')); // Body of your email here.
-        $attachment = array(
+        $last = db_query("SELECT MAX(id) as last FROM forum_questions")->fetchObject();
+        
+        $file_attachment = db_query("SELECT file_name FROM forum_question_attach WHERE question_id = ".$last->last);
+        //foreach $link as $file_attachment
+        $output = '';
+        while($link = $file_attachment->fetchObject())
+        {
+            $output .= '<a href='.$link->file_name.' download>Click Here To Download</a><br>';
+        }
+        $message = array('0'=>t('Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
+                                 Grade: '.grade($form_state['values']['grade']).'<br>
+                                 Topic: '.subject($form_state['values']['subject']).'<br>
+                                 Question: '.$form_state['values']['question_desc'].'<br>
+                                 File Attachment : '.$output.'')); // Body of your email here.
+        /*$attachment = array(
             'filecontent' => $directory,
             'filename' => $name,// You can change the name and extension of the file         you need to send.
             'filemime' => $filemime, 
-        );
+        );*/
+        
         $params = array(
             'body' => $message,
             'subject' => 'New Question Posted on Forum',
             'headers'=> array('Content-Type' => 'text/html'),
-            'attachment' => $attachment,
+            //'attachment' => $attachment,
         );
-        $to = "dineshsgaddi@gmail.com";
+        
+        $moderator_id = role_mail('moderator',$form_state['values']['grade'],$form_state['values']['subject']);
+        $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
+        $to = $moderator_id.",".$admin_moderator_id;
         $language = user_preferred_language($user);
         drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 	}
