@@ -239,6 +239,11 @@ function forum_mail_alter(&$message) {
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];              
                 break;
+            case 'rejectaquestion':
+              // Set headers etc
+                $message['subject'] = $params['subject'];
+                $message['body'] = $params['body'];
+                break;
             }
             
 	}

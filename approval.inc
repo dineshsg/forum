@@ -33,7 +33,26 @@
                 }else {
                     drupal_set_message('Error !!!!.Please try again.');
                 }
+
+                $stu_query = db_query("SELECT user_id,grade_id,subject_id,question FROM forum_questions WHERE id = ".$q_id)->fetchObject();
+                $user = user_load($stu_query->user_id);
+                
+                $message = array('0'=>t('Dear Student,<br><br>A question has been posted on forums and is waiting for the approval<br>
+                                 Grade: '.grade($stu_query->grade_id).'<br>
+                                 Topic: '.subject($stu_query->subject_id).'<br>
+                                 Question: '.$stu_query->question.'')); // Body of your email here.
+                
+                $params = array(
+                    'body' => $message,
+                    'subject' => 'Question has been Rejected by the Moderator',
+                    'headers'=> array('Content-Type' => 'text/html'),
+                    //'attachment' => $attachment,
+                );
+                $to = $user->mail;
+                $language = user_preferred_language($user);
+                drupal_mail('forum', 'rejectaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
                 drupal_goto('forum/question/approval');
+                
             }
             
         }
