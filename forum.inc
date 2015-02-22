@@ -4,8 +4,6 @@
     {
 	global $user;
 		$output ="";
-       /* $output ="<div class='clear' ><div class='col-12 content_down content-font border_blue' style='background-color:#efefef;border:2px solid #0099cc !important;;border-radius:4px;'><a href='#'>Ask-a-question</a> | <a href='#'>Search</a> | <a href='#'>Reply to Question</a> | <a href='#'>Approve Question</a></div></div>";*/
-	 // echo $rid1 =user_roles();
 	  	if(in_array('administrator',$user->roles) || in_array('admin moderator',$user->roles) || in_array('moderator',$user->roles)){
 	 		$output.="<div class='col-12 text_right'><a href='forum/question/approval' class='btn btn-default'>Approve Question</a> <a href='forum/comment/approval' class='btn btn-default'>Approve Answers</a></div>";
 		}

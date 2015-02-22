@@ -7,9 +7,6 @@
 	{
 	    global $user;
 			
-		//if($user->uid){
-		/*if(in_array('administrator',$user->roles) || in_array('authenticated user',$user->roles)){
-		if(!in_array('anonymous user',$user->roles))*/
 		if($user->uid){
 	    $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
         $grd_nm = $result_grade[0]->grade_name;
@@ -73,9 +70,6 @@
 		
 	    global $user;
 	    $pre_text = escape($form_state['values']['question_desc']);
-	    /*$query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text."', '".$user->uid."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";*/
-		
-		//$pre_text2 = htmlspecialchars($form_state['values']['question_desc'],ENT_QUOTES);
 		$pre_text2 = htmlentities($form_state['values']['question_desc'],ENT_QUOTES);
 		
 		$query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text2."', '".$user->uid."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
@@ -112,7 +106,6 @@
                 $tmp = explode(".", $name);
                 $extension=end($tmp);
                 $name="Attachment-".$key.".".$extension;
-                //if (($_FILES['files']['size'][$key] < 20000) && in_array($extension, $allowedExts))
 				
                 if (in_array($extension, $allowedExts)){
                     $moved = move_uploaded_file($tmp_name, $directory.'/'.$name);
@@ -129,7 +122,6 @@
         $last = db_query("SELECT MAX(id) as last FROM forum_questions")->fetchObject();
         
         $file_attachment = db_query("SELECT file_name FROM forum_question_attach WHERE question_id = ".$last->last);
-        //foreach $link as $file_attachment
         $output = '';
         while($link = $file_attachment->fetchObject())
         {
@@ -189,10 +181,11 @@
            $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
            $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
-		   //if(!user_is_logged_in())
-		   //{
+		   if(!user_is_logged_in())
+		   {
 				$result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
-		   //}
+				$result->condition('fqr.status', 1, '=');
+		   }
            $result->fields('fs', array('subject_name'));
            $result->fields('fg', array('grade_name'));
            $result->fields('fq', array('question','user_id','created','id'));
@@ -214,15 +207,15 @@
 		   $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
            $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
-		   //if(!user_is_logged_in())
-		   //{
+		   if(!user_is_logged_in())
+		   {
 				$result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
-		   //}
+				$result->condition('fqr.status', 1, '=');
+		   }
            $result->fields('fs', array('subject_name'));
            $result->fields('fg', array('grade_name'));
            $result->fields('fq', array('question','user_id','created','id'));
            $result->condition('fq.status', 1, '=')
-				  ->condition('fqr.status', 1, '=')
                   ->condition('fg.id', $grades,'=')
                   ->condition('fs.id', $subjects,'=')
                   ->execute()

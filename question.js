@@ -1,5 +1,5 @@
 jQuery(document).ready(function($) {
-    webroot = "http://"+location.hostname+":85/iParent/";
+    webroot = "http://"+location.hostname+"/iParent/";
 	
 	if(navigator.userAgent.match(/iPad/i))
 	{
