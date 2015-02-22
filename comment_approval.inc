@@ -40,7 +40,7 @@ function comment_waiting_for_approval()
                 /*------------------------------------------------------------
                     List of comment which are waiting for moderators approval
                 --------------------------------------------------------------*/
-            if ((in_array('moderator', $user->roles)) || (in_array('admin moderator', $user->roles)))
+            if ((in_array('moderator', $user->roles)) || (in_array('admin moderator', $user->roles))||($user->uid == 1))
             {
                 $output = '';
                 $row = array();
@@ -95,8 +95,8 @@ function comment_waiting_for_approval()
                 {
                     while ($item = $result->fetch())
                     {
-                        $user = user_load($item->user_id);
-                        $username = $user->name;
+                        $user_post = user_load($item->user_id);
+                        $username = $user_post->name;
                         $date_ago = ago($item->created);
                         $row[] = array($item->question,$item->reply_message,$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1').' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1'));
                     }

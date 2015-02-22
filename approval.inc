@@ -61,7 +61,7 @@
                 /*------------------------------------------------------------
                     List of Questions which are waiting for moderators approval
                 --------------------------------------------------------------*/
-            if ((in_array('moderator', $user->roles)) || (in_array('admin moderator', $user->roles)))
+            if ((in_array('moderator', $user->roles)) || (in_array('admin moderator', $user->roles)) || ($user->uid == 1))
             {
                 $output = '';
                 $row = array();
@@ -78,6 +78,7 @@
                 $result->fields('fs', array('subject_name'));
                 $result->fields('fg', array('grade_name'));
                 $result->fields('fq', array('question','user_id','created','id'));
+				$result->condition('fq.status',0,'=');
                 if (in_array('moderator', $user->roles))
                 {
                     /*------------------------------------
@@ -119,8 +120,10 @@
                 {
                     while ($item = $result->fetch())
                     {
+						$temp_user_post=user_load($item->user_id);
+						$post_user=$temp_user_post->name;
                         $date_ago = ago($item->created);
-                        $row[] = array($item->grade_name,$item->subject_name,$item->question,$user->name.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question/approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
+                        $row[] = array($item->grade_name,$item->subject_name,$item->question,$post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question/approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
                     $output .= theme('pager');

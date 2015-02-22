@@ -6,8 +6,11 @@
 	function ask_a_question_form($form_state)
 	{
 	    global $user;
-	    if($user->uid)
-	    {
+			
+		//if($user->uid){
+		/*if(in_array('administrator',$user->roles) || in_array('authenticated user',$user->roles)){
+		if(!in_array('anonymous user',$user->roles))*/
+		if($user->uid){
 	    $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
         $grd_nm = $result_grade[0]->grade_name;
         $grd_id = $result_grade[0]->id;
@@ -51,7 +54,7 @@
         }
         else
         {
-            drupal_set_message('You need to login to post a question <a href="node/13">Login</a>');
+            drupal_set_message('You need to login to post a question <a href="node/53">Login</a>');
         }
 	}
 
@@ -67,9 +70,15 @@
 	
 	function ask_a_question_form_submit($form, &$form_state)
 	{
+		
 	    global $user;
 	    $pre_text = escape($form_state['values']['question_desc']);
-	    $query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text."', '".$user->uid."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
+	    /*$query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text."', '".$user->uid."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";*/
+		
+		//$pre_text2 = htmlspecialchars($form_state['values']['question_desc'],ENT_QUOTES);
+		$pre_text2 = htmlentities($form_state['values']['question_desc'],ENT_QUOTES);
+		
+		$query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text2."', '".$user->uid."',  '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
 	    if(db_query($query)){
 			drupal_set_message('New Question has been posted Successfully');
 		}else {
@@ -104,11 +113,12 @@
                 $extension=end($tmp);
                 $name="Attachment-".$key.".".$extension;
                 //if (($_FILES['files']['size'][$key] < 20000) && in_array($extension, $allowedExts))
+				
                 if (in_array($extension, $allowedExts)){
                     $moved = move_uploaded_file($tmp_name, $directory.'/'.$name);
                 }
                 else{
-                        drupal_set_message(t('Some file cannot be uploaded on the forum. Please contact the administrator of this site.'), 'error');
+                        drupal_set_message(t($directory.'/'.$name.'Some file cannot be uploaded on the forum. Please contact the administrator of this site.'), 'error');
                 }
                 $path_name = $directory.'/'.$name;
                 $query = db_query("INSERT INTO `forum_question_attach` (`question_id`, `file_name` ,`file_type`) VALUES ('".$last."', '".$path_name."','".$_FILES['files']['type'][$key]."')");
@@ -161,6 +171,7 @@
 	function _forum_question()
 	{   
 	   global $base_path;
+	   global $user;
 	   $grades = arg(2);
 	   $subjects = arg(3);
 	   $output = '';
@@ -178,32 +189,40 @@
            $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
            $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
-           $result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
+		   //if(!user_is_logged_in())
+		   //{
+				$result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
+		   //}
            $result->fields('fs', array('subject_name'));
            $result->fields('fg', array('grade_name'));
            $result->fields('fq', array('question','user_id','created','id'));
            $result->condition('fqr.status', 1, '=');
            $result->condition('fq.status', 1, '=')
-                  ->execute()
+				  ->condition('fqr.status', 1, '=')
+				  ->execute()
                   ->fetchAll();
            $table_sort = $result->extend('TableSort')
                        ->orderByHeader($header);
            $pager = $table_sort->extend('PagerDefault')
-                  ->orderBy('created', 'ASC')
+                  ->orderBy('created', 'DESC')
                   ->limit(5);
            $result = $pager->execute();
 	   }
 	   else
 	   {
 	       $result = db_select('forum_questions','fq');
-	       $result->distinct();
+		   $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
            $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
-           $result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
+		   //if(!user_is_logged_in())
+		   //{
+				$result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
+		   //}
            $result->fields('fs', array('subject_name'));
            $result->fields('fg', array('grade_name'));
            $result->fields('fq', array('question','user_id','created','id'));
            $result->condition('fq.status', 1, '=')
+				  ->condition('fqr.status', 1, '=')
                   ->condition('fg.id', $grades,'=')
                   ->condition('fs.id', $subjects,'=')
                   ->execute()
@@ -211,25 +230,34 @@
            $table_sort = $result->extend('TableSort')
                        ->orderByHeader($header);
            $pager = $table_sort->extend('PagerDefault')
-                  ->orderBy('created', 'ASC')
+                  ->orderBy('created', 'DESC')
                   ->limit(5);
+			
            $result = $pager->execute();
 	   }
 	   if($result->rowCount() > 0)
 	   {
 	        while ($item = $result->fetch())
             {
-                $user = user_load($item->user_id);
-                $username = $user->name;
+                $query_user = user_load($item->user_id);
+                $query_username = $query_user->name;
                 $date_ago = ago($item->created);
-                $row[] = array($item->grade_name,$item->subject_name,l(".$item->question.",'forum/question-detail/'.$item->id.''),$username.'<div class="algn-right small-font">'.$date_ago.'</div>');
+				//$output .= html_entity_decode($item->question)."#";
+				//$abc= nl2br($item->question);
+				//$text= str_replace('<br />', PHP_EOL,$abc);
+                $row[] = array($item->grade_name,$item->subject_name,l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
             }
             $output .= theme('table',array('header' => $header,'rows' => $row));
             $output .= theme('pager');
+			$baseurl=base_path()."ask-a-question";
+			/*$output .= "<div class='content_down clear'>Not found solution for your question... <a href='../../../../ask-a-question' class='btn btn-default' >Ask a question</a></div>";*/
+			$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
        }
        else
 	   {
-	    $output .= "<div class='sub-title clear'>No questions have been posted.<a href='#'>Go Back to Forum</a></div>";
+			$baseurl1=base_path()."forums";
+			$baseurl=base_path()."ask-a-question";
+	    	$output .= "<div class='sub-title clear'>No questions have been posted.<a href='".$baseurl1."'>Go Back to Forum</a></div><br /><a href='".$baseurl."' class='btn btn-default' >Ask a question</a>";
 	   }
 	   return $output;
 	}
@@ -242,11 +270,10 @@
     {
         global $user;
         $account = $user;
-        
         $question_id = arg(2);
         $output = '';
         $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');
-        $question_reply = db_query('SELECT qr.reply_message, qr.id, qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
+        $question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
         $output .= "<div>";
   	    while($rows = $question_detail->fetchObject()){
 		 $output .= "<div class='col-12'><div class='img_bg border_blue'><div class='space'>
@@ -267,12 +294,12 @@
                     </div>";
         $output .= "<div class='content-font'>
                         <div>Question:</div>
-                        <h5 class='font-300 font-black'><p style='text-indent: auto;'><strong>".$rows->question."</strong></p></h5></div></div>";
+                        <h5 class='font-300 font-black'><p style='text-indent: auto;'><strong>".nl2br($rows->question)."</strong></p></h5></div></div>";
         }
        
-        $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
+        $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
-        $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$account->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
+        $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
         if($teacher_query->rowCount() > 0)
         {
             $form_question = drupal_get_form("question_reply_form", $question_id);
@@ -289,15 +316,17 @@
 	    {
             while($reply = $question_reply->fetchObject())
             {
+				$reply_temp_user = user_load($reply->user_id);
+				$reply_user = $reply_temp_user->name;
                 $output .= "<div class='space content-font'>
                             <div>
-                            <span>Replied By:</span><strong><span>".$temp_username."</span></strong>
+                            <span>Replied By:</span><strong><span>".$reply_user."</span></strong>
                             </div>
                             <div>
                             <span>Date - </span><strong><span>".date('F jS Y', strtotime($reply->created))."</span></strong>
                             </div>";
                 $output .= "<div id='form_{$reply->id}' class='form-wrapper'>";
-                $output .= "<div>Answer:</div><h5 class='font-300 font-black'><strong>".$reply->reply_message."</strong></h5>";
+                $output .= "<div>Answer:</div><h5 class='font-300 font-black'><strong>".nl2br($reply->reply_message)."</strong></h5>";
                 $output .= "</div>";
                 $output .= "</div><br>";
             }
@@ -354,7 +383,8 @@
         );
         
         
-        $to = "dineshsgaddi@gmail.com";
+        //$to = "dineshsgaddi@gmail.com";
+		$to = "manjiris@winjit.com";
         $language = user_preferred_language($user);
         drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
     }

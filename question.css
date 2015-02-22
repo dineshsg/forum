@@ -25,6 +25,7 @@
    border-style : none;
 }
 
+/*
 #primary td
 {
     border-right: none !important;
@@ -33,6 +34,20 @@
     border-bottom: none !important;
 }
 #primary table
+{
+    border-style:none !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}*/
+.table-striped td
+{
+    border-right: none !important;
+    border-left: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    width:1% !important;
+}
+.table-striped 
 {
     border-style:none !important;
     margin-left: auto !important;
@@ -66,33 +81,146 @@
 .space{
     padding-left:9%;
 }
+#forum-search .form-item-search{
+	text-align:center;
+	padding: 0px;
+	float:left;
+}
+.form-item-search #edit-search {
+	border: 1px solid #dadada;
+	border-radius: 5px 0px 0px 5px;
+	color: #000;
+	font-size: 18px;
+	line-height: 20px; 
+	margin: 0; 
+	outline: 0 none; 
+	padding: 13px 12px; 
+	position: relative; 
+	transition: all 0.3s linear 0s; 
+	/*width: 50%; */
+	z-index: 101;
+	width:440px;
+}
+#forum-search #edit-submit{
+padding: 16px 0.9em 15px;
+border-radius: 0px 5px 5px 0;px;
+}
 /*#primary th{
     background:none !important;
     border-top : none !important;
 }*/
-<!--  winjit 2nd Feb 15  -->
+<!-- Start winjit 2nd Feb 15  -->
 .grade, .grade1 {
-	width:24%;
+	/*width:24%;*/
 }
 .thumb {
 	width: 96%!important;
-	margin:2% !important;
+	margin:2% !important;	
+	background-repeat:no-repeat;
+	background-position:center;
+	border:#666666 thin;
+}
+.column1{
+	visibility:visible;
+	display:block;
+}
+.column2{
+	visibility:hidden;
+	display:none;
+}
+.dropdown-forum
+{
+	font-size: 13px;    
+    padding: 5px ;
+    text-align: left;
+    width: 50%;
+}
+.form-type-file label{ /*,.form-type-textarea label*/
+	float:left;
+}
+#edit-question-desc{
+	font-size: 13px;
+	/*width:100%;*/
+}
+.form-type-file .description
+{
+	color:#FF0000;
+}
+.topics-forum{
+	min-width:200px;
 }
 .question-reply{
     width:55% !important;
 }
 @media screen and (min-width:500px) and (max-width:800px)   {
-.grade, .grade1{
-	width:49% !important;
+	.grade, .grade1{
+		width:49% !important;
+	}
+	#edit-grade,#edit-subject{
+		/*width:auto !important;*/
+		width:100% !important;
+		height:auto !important;
+	}
+	.form-type-file label,.form-type-textarea label{ 
+		float:none;
+	}
+	.topics-forum{
+		min-width: 255px;
+	}
+	#forum-search .form-item-search{
+	padding-left:80px;
+	}
 }
 
-}
 @media screen and (max-width:499px)  {
 .grade, .grade1{
 	width:98% !important;
 	height:150px !important;
 }
+#edit-grade,#edit-subject{	
 
+		/*width:auto !important;*/
+		width:100% !important;
+		height:auto !important;
+	}
+	.column1{
+		visibility:hidden;
+		display:none;
+	}
+	.column2{
+		visibility:visible;
+		display:block;
+	}
+	.form-type-file label,.form-type-textarea label{ 
+		float:none;
+	}
+	.topics-forum{
+		min-width: 270px;
+	}
+	.form-item-search #edit-search {
+		width:260px;		
+	}
+	#forum-search #edit-submit{
+		padding: 16px 0.9em 16px;		
+	}
+}
+@media screen and (max-width:380px)  {
+	.form-item-search #edit-search {
+		width:215px;		
+	}
+}
+@media screen and (min-width:767px) and (max-width:800px)   {
+	#forum-search #edit-submit{
+		padding: 16px 0.5em 16px;		
+	}
+}
+@media screen and (min-width:500px) and (max-width:658px)   {
+	#forum-search #edit-submit{
+		padding: 16px 0.5em 16px;		
+	}
+	.form-item-search #edit-search {
+		width:300px;		
+	}
 }
 <!-- End  winjit 2nd Feb 15  -->
 .form-item-search{

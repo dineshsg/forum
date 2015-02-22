@@ -2,9 +2,16 @@
 
     function forum()
     {
-        $output ="<div class='col-12'><a href='ask-a-question' class='ctools-use-modal ctools-modal-forum-style'>Ask a question</a></div>";
+	global $user;
+		$output ="";
+       /* $output ="<div class='clear' ><div class='col-12 content_down content-font border_blue' style='background-color:#efefef;border:2px solid #0099cc !important;;border-radius:4px;'><a href='#'>Ask-a-question</a> | <a href='#'>Search</a> | <a href='#'>Reply to Question</a> | <a href='#'>Approve Question</a></div></div>";*/
+	 // echo $rid1 =user_roles();
+	  	if(in_array('administrator',$user->roles) || in_array('admin moderator',$user->roles) || in_array('moderator',$user->roles)){
+	 		$output.="<div class='col-12 text_right'><a href='forum/question/approval' class='btn btn-default'>Approve Question</a> <a href='forum/comment/approval' class='btn btn-default'>Approve Answers</a></div>";
+		}
+		$output.="<h1 class='font-500 align-center'>Welcome</h1><br>";
         $search = drupal_get_form("forum_search");
-        $output .= "<span>".drupal_render($search)."</span>";
+        $output .= "<div class='col-lg-3 col-md-2 col-sm-1 col-xs-0'>&nbsp;</div><div class='col-lg-7 col-md-8 col-sm-10 col-xs-12'><span>".drupal_render($search)."</span></div><div class='col-lg-2 col-md-2 col-sm-1 col-xs-0'>&nbsp;</div><div class='clear'></div>";
         $query = 'SELECT DISTINCT fg.grade_name,fg.id FROM forum_grades fg, forum_subjects fs WHERE fg.id = fs.grade_id';
         $result = db_query($query);
         
@@ -61,50 +68,35 @@
 				}
             if($count)
             {
-            /*$output .= "<div class='grade common' id='".$row->id."' target='".$row->id."'>
-            <div class='thumb'>  	<img data-src='holder.js/225x100/random/font:Droid Sans/text:".$row->grade_name."'>
-        	<div class='caption'>
-        		Placeholder with random theme
-        	</div>
-            </div>
-            </div>";			*/
-			$output .= "<div class='grade1 common' id= '".$row->id."' target='".$row->id."'>
-            <div class='thumb' style='background-image:url(./images/grades/".$img.");'>
+            /*$output .= "<div class='grade common' id='".$row->id."' target='".$row->id."'><div class='thumb'><img data-src='holder.js/225x100/random/font:Droid Sans/text:".$row->grade_name."'>
+        	<div class='caption'>Placeholder with random theme</div></div></div>";	*/
+			
+			$output .= "<div class='grade1 common' id= '".$row->id."' target='".$count."'>
+            <div class='thumb' style='background-image:url(./images/grades/".$img.");cursor:pointer;'>        	
         	&nbsp; 
-            </div><div class='caption content-font'>
-        		".$row->grade_name."
-        	</div></div>";
+            </div><div class='caption content-font common' id='title".$row->id."'  target='".$count."' style='cursor:pointer;'>".$row->grade_name."</div></div>";
             }
             else
             {
-           /* $output .= "<div class='grade1 common' id= '".$row->id."' target='".$row->id."'>
-            <div class='thumb'>
-        	<img data-src='holder.js/225x100/random/font:Droid Sans/text:".$row->grade_name."'>
-        	<div class='caption'>
-        		Placeholder with random theme
-        	</div>
-            </div>
-            </div>";*/
-		$output .= "<div class='grade1 common' id= '".$row->id."' target='".$row->id."'>
-            <div class='thumb' style='background-image:url(./images/grades/".$img.");'> 
-        	&nbsp; 
-            </div><div class='caption content-font'>
-        		".$row->grade_name."
-        	</div></div>";
+          /*$output .= "<div class='grade1 common' id= '".$row->id."' target='".$row->id."'>*/
+		
+			$output .= "<div class='grade1 common' id= '".$row->id."' target='".$count."'>
+				<div class='thumb' style='background-image:url(./images/grades/".$img.");cursor:pointer;' >        	
+				&nbsp; 
+				</div><div class='caption content-font common' id='title".$row->id."'  target='".$count."' style='cursor:pointer;'>".$row->grade_name."
+				</div></div>";
 			//<img data-src='holder.js/225x100/random/font:Droid Sans/text:".$row->grade_name."'>
             }
             //$output .=".$row->subject_name.";
 			//$output .="<input type='hidden' id='hdn".$row->id."' name='".$count."' value='".$count."' />";
-            $count++;
-			/*if($count%4==0)
-			{
-				$divid="div".$count;
-				$output .= "<div class='container_subjects' style='clear:both;background:#efefef;! important;height:191px;width:96%;' id='".$count."' ></div>";
-			}*/
+            $count++;		
         }
-		//$divid="div".$count;
-        $output .= "<div class='container_subjects' style='clear:both;background:#efefef;! important;width:96%;
-overflow:hidden;' id='container_subjects'  ></div>";//height:191px;  id='".$divid."'
+		
+        /* $output .= "<div class='container_subjects' style='clear:both;background:#efefef;! important;width:96%;
+overflow:hidden;padding-left:auto;padding-right:auto;' id='container_subjects'  ></div>";*///height:191px;  id='".$divid."'
+
+ $output .= "<div class='container_subjects col-12' style='clear:both;background:#efefef;! important;
+overflow:hidden;padding-top:15px;' id='container_subjects'  ></div>";
         return $output;
     }
     

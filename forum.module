@@ -1,7 +1,7 @@
 <?php
 
 	function forum_menu(){
-
+	
         $items['forums'] = array(
 		    'title' => 'Forums',
 		    'page callback' => array('forum'),
@@ -198,7 +198,7 @@
             'Ask A Question'=> array(
                 'title' => t('Asking A Question on Forum')
             ),
-            'Moderator Approval'=> array(
+            'Question Moderator Approval'=> array(
                 'title' => t('Questions Waiting For Moderator Approval')
             ),
             'Question Reply'=> array(
@@ -270,14 +270,21 @@ function forum_mail_alter(&$message) {
             $lname = $query->lname;
             $mobile = $query->mobile;
             $grade = $query->grade;
+			$subject = explode(',',$query->subject);
+			foreach($subject as $temp_sub)
+			{
+				$subject_t[] = subject($temp_sub);
+			}
         }
         else
         {
             $fname = ' ';
             $lname = ' ';
             $mobile = ' ';
+			$grade = ' ';
+			$subject = ' ';
         }
-        
+
           if ($form_id === 'user_profile_form' ) 
           { 
                 $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
@@ -318,6 +325,7 @@ function forum_mail_alter(&$message) {
                     '#title' => t('Grade'),
                     '#type' => 'select',
                     '#options' => $option,
+					'#default_value' => $grade,
                     '#attributes' => array('class' => array('grade')),
                     '#validated' => TRUE,
                 );
@@ -325,8 +333,10 @@ function forum_mail_alter(&$message) {
                     '#title' => t('Topic'),
                     '#type' => 'select',
                     '#multiple' => TRUE,
-                    '#options' => array(''=> '-- Select --'),
-                    '#attributes' => array('class' => array('subject')),
+					//'#default_value' => $subject_t,
+                    //'#options' => array(''=> '-- Select --'),
+					'#options' => $subject_t,
+					'#attributes' => array('class' => array('subject')),
                     '#validated' => TRUE
                 );
             }
@@ -335,16 +345,16 @@ function forum_mail_alter(&$message) {
     }
     function forum_form_alter_submit($form_state,$form_id)
     {
-        if ($form_id === 'user_profile_form' ) 
+        if ($form_id['build_info']['form_id'] === 'user_profile_form' ) 
         {
-        $fname = $form_state['values']['tfname'];
-        $lname = $form_state['values']['tlname'];
-        $mobile = $form_state['values']['tmobile'];
-        if($form_state['values']['subject'])
+        $fname = $form_state['tfname']['#value'];
+        $lname = $form_state['tlname']['#value'];
+        $mobile = $form_state['tmobile']['#value'];
+        if($form_state['subject']['#value'])
         {
-            $selected_subjects = implode(",",$form_state['values']['subject']);
+            $selected_subjects = implode(",",$form_state['subject']['#value']);
             $user = arg(1);
-            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['values']['grade']."', '".$selected_subjects."')";
+            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['grade']['#value']."', '".$selected_subjects."')";
             if(db_query($query))
             {
                 drupal_set_message('Stored successfully');
