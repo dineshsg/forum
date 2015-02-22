@@ -235,15 +235,11 @@
                 $query_user = user_load($item->user_id);
                 $query_username = $query_user->name;
                 $date_ago = ago($item->created);
-				//$output .= html_entity_decode($item->question)."#";
-				//$abc= nl2br($item->question);
-				//$text= str_replace('<br />', PHP_EOL,$abc);
                 $row[] = array($item->grade_name,$item->subject_name,l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
             }
             $output .= theme('table',array('header' => $header,'rows' => $row));
             $output .= theme('pager');
 			$baseurl=base_path()."ask-a-question";
-			/*$output .= "<div class='content_down clear'>Not found solution for your question... <a href='../../../../ask-a-question' class='btn btn-default' >Ask a question</a></div>";*/
 			$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
        }
        else

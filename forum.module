@@ -262,6 +262,7 @@ function forum_mail_alter(&$message) {
 	function forum_form_alter(&$form,$form_state,$form_id)
 	{
 	    $user = arg(1);
+	    $subject_t = array();
         $user_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user."'");
         if($user_query->rowCount() >0)
         {
@@ -285,7 +286,7 @@ function forum_mail_alter(&$message) {
 			$subject = ' ';
         }
 
-          if ($form_id === 'user_profile_form' ) 
+          if (($form_id === 'user_profile_form' )||($form_id === 'user_register_form'))
           { 
                 $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
                 $grd_nm = $result_grade[0]->grade_name;
@@ -333,7 +334,7 @@ function forum_mail_alter(&$message) {
                     '#title' => t('Topic'),
                     '#type' => 'select',
                     '#multiple' => TRUE,
-					//'#default_value' => $subject_t,
+					'#default_value' => $subject_t,
                     //'#options' => array(''=> '-- Select --'),
 					'#options' => $subject_t,
 					'#attributes' => array('class' => array('subject')),
@@ -345,16 +346,26 @@ function forum_mail_alter(&$message) {
     }
     function forum_form_alter_submit($form_state,$form_id)
     {
-        if ($form_id['build_info']['form_id'] === 'user_profile_form' ) 
-        {
+        
+        //if (($form_id === 'user_profile_form' )||($form_id === 'user_register_form')) 
+        //{
         $fname = $form_state['tfname']['#value'];
         $lname = $form_state['tlname']['#value'];
         $mobile = $form_state['tmobile']['#value'];
         if($form_state['subject']['#value'])
         {
             $selected_subjects = implode(",",$form_state['subject']['#value']);
-            $user = arg(1);
-            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['grade']['#value']."', '".$selected_subjects."')";
+            if($form_id['build_info']['form_id'] == 'user_register_form')
+            { 
+                $add_u = db_query("SELECT max(uid) as usr FROM users")->fetchAll();
+                $user_add = $add_u[0]->usr;
+            }
+            else 
+            {
+                $user_add = arg(1);
+            }
+            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user_add."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['grade']['#value']."', '".$selected_subjects."')";
+            
             if(db_query($query))
             {
                 drupal_set_message('Stored successfully');
@@ -364,7 +375,7 @@ function forum_mail_alter(&$message) {
                 drupal_set_message("Error");
             }
         }
-        }
+        //}
     }
     function ago($timestamp){
         $difference = time() - strtotime($timestamp);
