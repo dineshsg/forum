@@ -340,6 +340,7 @@
             '#type' => 'textarea',
             '#wysiwyg' => True,
             '#resizable' => FALSE,
+            '#required' => TRUE,
             '#attributes' => array(
                     'class' => array('question-reply')
             ),

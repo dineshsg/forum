@@ -347,8 +347,8 @@ function forum_mail_alter(&$message) {
     function forum_form_alter_submit($form_state,$form_id)
     {
         
-        //if (($form_id === 'user_profile_form' )||($form_id === 'user_register_form')) 
-        //{
+        if (($form_id === 'user_profile_form' )||($form_id['build_info']['form_id'] == 'user_register_form')) 
+        {
         $fname = $form_state['tfname']['#value'];
         $lname = $form_state['tlname']['#value'];
         $mobile = $form_state['tmobile']['#value'];
@@ -382,7 +382,7 @@ function forum_mail_alter(&$message) {
                 drupal_set_message("Error");
             }
         }
-        //}
+        }
     }
     function ago($timestamp){
         $difference = time() - strtotime($timestamp);
