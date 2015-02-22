@@ -364,8 +364,15 @@ function forum_mail_alter(&$message) {
             {
                 $user_add = arg(1);
             }
-            $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user_add."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['grade']['#value']."', '".$selected_subjects."')";
-            
+            $user_db_exist = db_query('SELECT count(*) as cnt FROM users_extend WHERE uid='.$user_add)->fetchAll();
+            if($user_db_exist[0]->cnt > 0)
+            {
+                $query = "UPDATE `users_extend` SET `fname`='".$fname."',`lname`='".$lname."',`mobile`='".$mobile."',`grade`='".$form_state['grade']['#value']."',`subject`='".$selected_subjects."' WHERE uid = '".$user_add."'";
+            }
+            else
+            {
+                $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user_add."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['grade']['#value']."', '".$selected_subjects."')";
+            }    
             if(db_query($query))
             {
                 drupal_set_message('Stored successfully');
