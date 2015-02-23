@@ -109,14 +109,66 @@ overflow:hidden;padding-top:15px;' id='container_subjects'  ></div>";
 		$form["submit"] = array(
             '#type' => 'submit',
             '#value' => "Search",
-            ''
         );
         return $form;
     }
     function forum_search_submit($form, &$form_state)
     {
-        $output = "##########################";
-        drupal_set_message('slkdjflksjd');     
-        return $output;   
+        $redirect = 'forum/search/result/?param='.$form_state['values']['search'];
+        drupal_goto($path = $redirect);
+    }
+    
+    function forum_search_result($param)
+    {
+        $output = '';
+        $params = explode('=', $param);
+        $header = array(
+            array('data' => 'Grade', 'field' => 'subject_name', 'sort' => 'desc'),
+            array('data' => 'Topic', 'field' => 'grade_name', 'sort' => 'desc'),
+            array('data' => 'Question', 'field' => 'question', 'sort' => 'desc'),
+            array('data' => 'Posted By', 'field' => 'created', 'sort' => 'desc'),
+        );
+        $result = db_select('forum_questions','fq');
+        $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
+        $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
+        $result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
+        $result->fields('fs', array('subject_name'));
+        $result->fields('fg', array('grade_name'));
+        $result->fields('fq', array('question','user_id','created','id'));
+        $result->condition('fqr.status', 1, '=');
+        $result->condition('fq.status', 1, '=')
+			   ->condition('fqr.status', 1, '=')
+			   ->condition('fq.question', '%' . db_like($params[1]) . '%', 'LIKE')->distinct()
+			   ->execute()
+               ->fetchAll();
+        $table_sort = $result->extend('TableSort')
+                    ->orderByHeader($header);
+        $pager = $table_sort->extend('PagerDefault')
+               ->orderBy('created', 'DESC')
+               ->limit(5);
+        $result = $pager->execute();
+        if($result->rowCount() > 0)
+	   {
+	        while ($item = $result->fetch())
+            {
+                $query_user = user_load($item->user_id);
+                $query_username = $query_user->name;
+                $date_ago = ago($item->created);
+                $row[] = array($item->grade_name,$item->subject_name,l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
+            }
+            $form_search = drupal_get_form('forum_search');
+            $output .= drupal_render($form_search);
+            $output .= theme('table',array('header' => $header,'rows' => $row));
+            $output .= theme('pager');
+			$baseurl=base_path()."ask-a-question";
+			$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
+       }
+       else
+	   {
+			$baseurl1=base_path()."forums";
+			$baseurl=base_path()."ask-a-question";
+	    	$output .= "<div class='sub-title clear'>No questions have been posted.<a href='".$baseurl1."'>Go Back to Forum</a></div><br /><a href='".$baseurl."' class='btn btn-default' >Ask a question</a>";
+	   }
+        return $output;
     }
 ?>

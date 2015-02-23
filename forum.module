@@ -61,6 +61,12 @@
 		    'access callback' => TRUE,
 		    'file' => 'forum.inc',
 	    );
+	    $items['forum/search/result'] = array(
+		    'title' => 'Search Results',
+		    'page callback' => 'forum_search_result',
+		    'access callback' => TRUE,
+		    'file' => 'forum.inc',
+	    );
         $items['forum/question/approval'] = array(
             'title' => 'Questions Waiting For Approval',
 		    'page callback' => array('question_waiting_for_approval'),
