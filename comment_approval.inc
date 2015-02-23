@@ -71,7 +71,7 @@ function comment_waiting_for_approval()
                     /*------------------------------------
                          Check for Admin Moderator Roles
                     --------------------------------------*/
-                    $result->condition('status', 0)
+                    $result->condition('fqr.status', 0)
                            ->execute()
                            ->fetchAll();
                 }
