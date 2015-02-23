@@ -260,9 +260,10 @@ function forum_mail_alter(&$message) {
 	
 	function forum_form_alter(&$form,$form_state,$form_id)
 	{
-	    $user = arg(1);
+	    $user_arg = arg(1);
+	    global $user;
 	    $subject_t = array();
-        $user_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user."'");
+        $user_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user_arg."'");
         if($user_query->rowCount() >0)
         {
             $query = $user_query->fetchObject();
@@ -321,6 +322,8 @@ function forum_mail_alter(&$message) {
 			        '#prefix' => '<div id="errmsg"></div>',
 			        
 		        );
+		        if($user->uid)
+		        {
                 $form['grade'] = array(
                     '#title' => t('Grade'),
                     '#type' => 'select',
@@ -339,6 +342,7 @@ function forum_mail_alter(&$message) {
 					'#attributes' => array('class' => array('subject')),
                     '#validated' => TRUE
                 );
+                }
             }
                 $form['#submit'][] = 'forum_form_alter_submit';
                 return $form;                
@@ -370,6 +374,35 @@ function forum_mail_alter(&$message) {
             else
             {
                 $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user_add."', '".$fname."', '".$lname."','".$mobile."', '".$form_state['grade']['#value']."', '".$selected_subjects."')";
+            }    
+            if(db_query($query))
+            {
+                drupal_set_message('Stored successfully');
+            }
+            else
+            {
+                drupal_set_message("Error");
+            }
+        }
+        else
+        {
+            if($form_id['build_info']['form_id'] == 'user_register_form')
+            { 
+                $add_u = db_query("SELECT max(uid) as usr FROM users")->fetchAll();
+                $user_add = $add_u[0]->usr;
+            }
+            else 
+            {
+                $user_add = arg(1);
+            }
+            $user_db_exist = db_query('SELECT count(*) as cnt FROM users_extend WHERE uid='.$user_add)->fetchAll();
+            if($user_db_exist[0]->cnt > 0)
+            {
+                $query = "UPDATE `users_extend` SET `fname`='".$fname."',`lname`='".$lname."',`mobile`='".$mobile."',`grade`='0',`subject`='0' WHERE uid = '".$user_add."'";
+            }
+            else
+            {
+                $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user_add."', '".$fname."', '".$lname."','".$mobile."', '0', '0')";
             }    
             if(db_query($query))
             {

@@ -133,4 +133,13 @@ jQuery(document).ready(function($) {
                return false;
     } 
    });
+   /*$(".form-item-grade").hide();
+   $(".form-item-subject").hide();
+    if($('#edit-roles-4').attr('checked')) {
+        $(".form-item-grade").show();
+        $(".form-item-subject").show();
+    } else {
+        $(".form-item-grade").hide();
+        $(".form-item-subject").hide();
+    }*/
 });
