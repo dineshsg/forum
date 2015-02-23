@@ -232,7 +232,6 @@ function forum_mail_alter(&$message) {
               // Set headers etc
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];              
-                $message['params']['attachments'][] = $params['attachment'];
                 break;
             case 'replyaquestion':
               // Set headers etc
@@ -346,8 +345,7 @@ function forum_mail_alter(&$message) {
     }
     function forum_form_alter_submit($form_state,$form_id)
     {
-        
-        if (($form_id === 'user_profile_form' )||($form_id['build_info']['form_id'] == 'user_register_form')) 
+        if (($form_id['build_info']['form_id'] == 'user_profile_form' )||($form_id['build_info']['form_id'] == 'user_register_form')) 
         {
         $fname = $form_state['tfname']['#value'];
         $lname = $form_state['tlname']['#value'];
@@ -406,13 +404,27 @@ function forum_mail_alter(&$message) {
     {
         $rid = array_search($role, user_roles());
         $temp = array();
-        $mail_id = db_query("SELECT u.mail FROM users_roles as ur, users u, users_extend ue WHERE ur.rid = '".$rid."' AND ur.uid = u.uid AND ur.uid = ue.uid AND ue.grade = '".$grade."' AND FIND_IN_SET('".$subject."',ue.subject) > 0");
+        if($role == 'admin moderator')
+        {
+            $mail_id = db_query("SELECT DISTINCT u.mail FROM users_roles as ur, users u WHERE ur.rid = '".$rid."' AND ur.uid = u.uid");
+        }
+        else if($role == 'moderator')
+        {
+            $mail_id = db_query("SELECT u.mail FROM users_roles as ur, users u, users_extend ue WHERE ur.rid = '".$rid."' AND ur.uid = u.uid AND ur.uid = ue.uid AND ue.grade = '".$grade."' AND FIND_IN_SET('".$subject."',ue.subject) > 0");
+        }
         while($role_mail = $mail_id->fetchObject())
         {
             $temp[] = $role_mail->mail;
             
         }
-        $grp_mail = implode(",",$temp);
+        if (count($temp) === 1) 
+        {
+            $grp_mail = $temp[0];
+        }
+        else
+        {
+            $grp_mail = implode(",",$temp);
+        }
         return $grp_mail;
     }
 ?>

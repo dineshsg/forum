@@ -69,6 +69,7 @@
                             array('data' => 'Grade', 'field' => 'subject_name', 'sort' => 'asc'),
                             array('data' => 'Topic', 'field' => 'grade_name', 'sort' => 'asc'),
                             array('data' => 'Question', 'field' => 'question', 'sort' => 'asc'),
+							array('data' => 'Attachment', 'field' => 'id', 'sort' => 'asc'),
                             array('data' => 'Posted By', 'field' => 'user_id', 'sort' => 'asc'),
                             array('data' =>'Action', 'field' => '', 'sort' => 'asc')
                             );
@@ -123,7 +124,23 @@
 						$temp_user_post=user_load($item->user_id);
 						$post_user=$temp_user_post->name;
                         $date_ago = ago($item->created);
-                        $row[] = array($item->grade_name,$item->subject_name,$item->question,$post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question/approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
+						
+						////-- Added by manjiri --///////
+						$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);
+						
+						while ($row_attachment = $attacment_query->fetchObject())
+						{					
+						//////-- End Added by manjiri --/////						
+                        /*$row[] = array($item->grade_name,$item->subject_name,$item->question,$post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question/approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));*/
+						if($row_attachment->file_name)
+							$link="<a href='../../".$row_attachment->file_name."' target='_blank'>File</a>";
+						else
+							$link="-";
+						$row[] = array($item->grade_name,$item->subject_name,$item->question,$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question/approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
+						
+						//-- Added by manjiri --///
+						}
+						//-- End Added by manjiri --///
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
                     $output .= theme('pager');

@@ -117,7 +117,7 @@
                 $query = db_query("INSERT INTO `forum_question_attach` (`question_id`, `file_name` ,`file_type`) VALUES ('".$last."', '".$path_name."','".$_FILES['files']['type'][$key]."')");
             }
         }
-        $header = "MIME-Version: 1.0\r\n";
+        //$header = "MIME-Version: 1.0\r\n";
         
         $last = db_query("SELECT MAX(id) as last FROM forum_questions")->fetchObject();
         
@@ -132,24 +132,18 @@
                                  Topic: '.subject($form_state['values']['subject']).'<br>
                                  Question: '.$form_state['values']['question_desc'].'<br>
                                  File Attachment : '.$output.'')); // Body of your email here.
-        /*$attachment = array(
-            'filecontent' => $directory,
-            'filename' => $name,// You can change the name and extension of the file         you need to send.
-            'filemime' => $filemime, 
-        );*/
         
         $params = array(
             'body' => $message,
             'subject' => 'New Question Posted on Forum',
             'headers'=> array('Content-Type' => 'text/html'),
-            //'attachment' => $attachment,
         );
         
-        $moderator_id = role_mail('moderator',$form_state['values']['grade'],$form_state['values']['subject']);
         $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
-        $to = $moderator_id.",".$admin_moderator_id;
+        //$to = $admin_moderator_id;
+        $to = 'dineshsgaddi@gmail.com';
         $language = user_preferred_language($user);
-        drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
+        drupal_mail('forum', 'askaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 	}
 	
 	function forum()
@@ -261,7 +255,8 @@
         $account = $user;
         $question_id = arg(2);
         $output = '';
-        $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');
+        $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');		
+		$res_attachment = db_query('SELECT id,question_id,file_name from forum_question_attach where question_id='.$question_id.'');
         $question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
         $output .= "<div>";
   	    while($rows = $question_detail->fetchObject()){
@@ -281,9 +276,15 @@
                         <div>
                         	<span>Date - </span><strong><span>".date('F jS Y', strtotime($rows->created))."</span></strong>
                     </div>";
+		 			
         $output .= "<div class='content-font'>
                         <div>Question:</div>
-                        <h5 class='font-300 font-black'><p style='text-indent: auto;'><strong>".nl2br($rows->question)."</strong></p></h5></div></div>";
+                        <h5 class='font-300 font-black'><p style='text-indent: auto;'><strong>".nl2br($rows->question)."</strong></p></h5>";
+						while($rows_attach = $res_attachment->fetchObject()){
+		 					if($rows_attach->file_name)	
+		 						$output .="<a href='../../".$rows_attach->file_name."' target='_blank' class='font_blue'>See file attached</a><br />";
+						}
+						$output .="</div></div>";	
         }
        
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
@@ -351,7 +352,7 @@
         );
         $form["submit"] = array(
             '#type' => 'submit',
-            '#value' => "Send Mail"
+            '#value' => "Send Email"
         );
         return $form;
     }
