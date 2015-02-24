@@ -178,7 +178,6 @@
 	   if (!($grades)||!($subjects))
 	   {
            $result = db_select('forum_questions','fq');
-           $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
            $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');		   
 		   if(!user_is_logged_in())
@@ -189,9 +188,7 @@
            $result->fields('fs', array('subject_name'));
            $result->fields('fg', array('grade_name'));
            $result->fields('fq', array('question','user_id','created','id'));
-           $result->condition('fqr.status', 1, '=');
            $result->condition('fq.status', 1, '=')
-				  ->condition('fqr.status', 1, '=')
 				  ->execute()
                   ->fetchAll();
            $table_sort = $result->extend('TableSort')
@@ -275,6 +272,8 @@
         $account = $user;
         $question_id = arg(2);
         $output = '';
+        if($question_id)
+        {
         $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');		
 		$res_attachment = db_query('SELECT id,question_id,file_name from forum_question_attach where question_id='.$question_id.'');
         $question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
@@ -310,12 +309,11 @@
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
-		
         if($teacher_query->rowCount() > 0)
         {
             $form_question = drupal_get_form("question_reply_form", $question_id);
         }
-        else if($account->uid <= '1')/*$account->uid <= '0'*/
+        else if((!user_is_logged_in())||(in_array('authenticated user', $user->roles)))
         {
 		}
         else
@@ -345,6 +343,11 @@
         $output .= "<div class='space'>";
         $output .= drupal_render($form_question);
         $output .= "</div></div></div>";
+        }
+        else
+        {
+            $output .= 'Not A Valid Question';
+        }
         return $output;
     }
     
