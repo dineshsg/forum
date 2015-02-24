@@ -5,7 +5,7 @@ jQuery(document).ready(function($) {
 	{
 		$("#ask-a-question-form .form-type-file input").css("padding-left", "155px"); 
 	}
-	$('.grade').change(function(){
+	/*$('.grade').change(function(){
 	    grd = $('.grade').attr('value');
 	    $.ajax({
 	        type : 'POST',
@@ -30,7 +30,7 @@ jQuery(document).ready(function($) {
 			
         });
         
-    });
+    });*/
     
     $('.common').click(function() {
         //var grd = $(this).attr('id');

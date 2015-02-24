@@ -167,7 +167,7 @@ overflow:hidden;padding-top:15px;' id='container_subjects'  ></div>";
 	   {
 			$baseurl1=base_path()."forums";
 			$baseurl=base_path()."ask-a-question";
-	    	$output .= "<div class='sub-title clear'>No questions have been posted.<a href='".$baseurl1."'>Go Back to Forum</a></div><br /><a href='".$baseurl."' class='btn btn-default' >Ask a question</a>";
+	    	$output .= "<div class='sub-title clear'>Invalid Grade and Topic.<a class='btn btn-default' href='".$baseurl1."'>Go Back to Forum</a></div><br /><a href='".$baseurl."' class='btn btn-default' >Ask a question</a>";
 	   }
         return $output;
     }

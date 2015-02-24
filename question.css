@@ -4,10 +4,8 @@
     margin: 0 6px 0 0;
     background: 5.3% 1% url('img/jive-icon-sprites-big.png'), 
     -moz-linear-gradient(bottom, #ffffff, #ffffff);
-
     background: 5.3% 1% no-repeat url('img/jive-icon-sprites-big.png'), 
     -webkit-linear-gradient(bottom, #ffffff, #ffffff);
-
     background: right no-repeat url('img/jive-icon-sprites-big.png'), 
     linear-gradient(bottom, #ffffff, #ffffff);
     border-top-width: 120px;
@@ -151,6 +149,9 @@ border-radius: 0px 5px 5px 0;px;
 }
 .question-reply{
     width:55% !important;
+}
+.sticky-table td.active{
+	background-color: #eee;
 }
 @media screen and (min-width:500px) and (max-width:800px)   {
 	.grade, .grade1{

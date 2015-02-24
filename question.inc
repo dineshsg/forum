@@ -20,6 +20,11 @@
             '#type' => 'select',
             '#options' => $option,
             '#attributes' => array('class' => array('grade')),
+            '#ajax' => array(      
+              'event' => 'change',
+              'callback' => 'get_subject',
+              'wrapper' => 'dropdown-second-replace',
+            ),
             '#validated' => TRUE,
             '#required' => TRUE,
         );
@@ -141,7 +146,8 @@
         
         $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
         //$to = $admin_moderator_id;
-        $to = 'dineshsgaddi@gmail.com';
+        //$to = 'dineshsgaddi@gmail.com';
+		$to = 'manjiris@winjit.com';
         $language = user_preferred_language($user);
         drupal_mail('forum', 'askaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 	}
@@ -163,8 +169,8 @@
 	   $output = '';
 	   
 	   $header = array(
-                        array('data' => 'Grade', 'field' => 'subject_name', 'sort' => 'desc'),
-                        array('data' => 'Topic', 'field' => 'grade_name', 'sort' => 'desc'),
+                        /*array('data' => 'Grade', 'field' => 'subject_name', 'sort' => 'desc'),
+                        array('data' => 'Topic', 'field' => 'grade_name', 'sort' => 'desc'),*/
                         array('data' => 'Question', 'field' => 'question', 'sort' => 'desc'),
                         array('data' => 'Posted By', 'field' => 'created', 'sort' => 'desc'),
                         );
@@ -174,7 +180,7 @@
            $result = db_select('forum_questions','fq');
            $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
-           $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
+           $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');		   
 		   if(!user_is_logged_in())
 		   {
 				$result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
@@ -197,6 +203,19 @@
 	   }
 	   else
 	   {
+	   	   ////--------------------------------
+		   
+	       $res_grades = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grades);
+		   $row_grades = $res_grades->fetchObject();
+		   
+		   $res_topics = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subjects);
+		   $row_topics = $res_topics->fetchObject();
+		   
+		   $output .= "<div class='font-100 custom_font content_down '>
+  	                    Grade :<label class='font_black font-100'> ".$row_grades->grade_name." </label> &nbsp; &nbsp;
+  	                    Topic :<label class='font_black font-100'> ".$row_topics->subject_name." </label> 
+  	                  </div>";	     
+		   ////--------------------------------
 	       $result = db_select('forum_questions','fq');
 		   $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
@@ -229,7 +248,8 @@
                 $query_user = user_load($item->user_id);
                 $query_username = $query_user->name;
                 $date_ago = ago($item->created);
-                $row[] = array($item->grade_name,$item->subject_name,l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
+               /* $row[] = array($item->grade_name,$item->subject_name,l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');*/
+			    $row[] = array(l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
             }
             $output .= theme('table',array('header' => $header,'rows' => $row));
             $output .= theme('pager');
@@ -261,8 +281,8 @@
         $output .= "<div>";
   	    while($rows = $question_detail->fetchObject()){
 		 $output .= "<div class='col-12'><div class='img_bg border_blue'><div class='space'>
-  	                <div class='font-100 custom_font2 content_down ' style='display:none;'>
-  	                    Grade :<label class='font_black font-300'> ".$rows->grade_name." </label> &nbsp; &nbsp;               
+  	                <div class='font-100 custom_font2 content_down '>
+  	                    Grade :<label class='font_black font-300'> ".$rows->grade_name." </label> &nbsp; &nbsp;              
   	                    Topic :<label class='font_black font-300'> ".$rows->subject_name." </label> 
   	                </div></div>";
   	    
@@ -290,13 +310,14 @@
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
+		
         if($teacher_query->rowCount() > 0)
         {
             $form_question = drupal_get_form("question_reply_form", $question_id);
         }
-        else if($account->uid <= '0')
+        else if($account->uid <= '1')/*$account->uid <= '0'*/
         {
-        }
+		}
         else
         {
             drupal_set_message('You dont have access-rights to view this page');

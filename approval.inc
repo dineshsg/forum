@@ -127,7 +127,7 @@
 						
 						////-- Added by manjiri --///////
 						$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);
-						
+						$link="-";
 						while ($row_attachment = $attacment_query->fetchObject())
 						{					
 						//////-- End Added by manjiri --/////						
@@ -136,10 +136,11 @@
 							$link="<a href='../../".$row_attachment->file_name."' target='_blank'>File</a>";
 						else
 							$link="-";
+						}
 						$row[] = array($item->grade_name,$item->subject_name,$item->question,$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question/approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
 						
 						//-- Added by manjiri --///
-						}
+						//}
 						//-- End Added by manjiri --///
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
