@@ -328,7 +328,7 @@ function forum_mail_alter(&$message) {
 			        '#prefix' => '<div id="errmsg"></div>',
 			        
 		        );
-		        if($user->uid)
+		        if(($user->uid)&&(!in_array('authentcated user', $user->roles)))
 		        {
                 $form['grade'] = array(
                     '#title' => t('Grade'),
@@ -430,13 +430,27 @@ function forum_mail_alter(&$message) {
     function grade($grade)
     {
         $grade_query = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grade)->fetchAll();
-        return $grade_query[0]->grade_name;
+        if($grade_query->rowCount > 0)
+        {
+            return $grade_query[0]->grade_name;
+        }
+        else
+        {
+            return 0;
+        }
     }
     
     function subject($subject)
     {
-        $subject_query = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subject)->fetchAll();
-        return $subject_query[0]->subject_name;
+        $subject_query1 = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subject)->fetchAll();
+        if($subject_query1)
+        {
+            return $subject_query1[0]->subject_name;
+        }
+        else
+        {
+            return '';
+        }
     }
     
     function role_mail($role, $grade, $subject)
