@@ -285,11 +285,11 @@ function forum_mail_alter(&$message) {
         }
         else
         {
-            $fname = ' ';
-            $lname = ' ';
-            $mobile = ' ';
-			$grade = ' ';
-			$subject = ' ';
+            $fname = '';
+            $lname = '';
+            $mobile = '';
+			$grade = '';
+			$subject = '';
         }
 
           if (($form_id === 'user_profile_form' )||($form_id === 'user_register_form'))

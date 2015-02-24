@@ -134,11 +134,15 @@ overflow:hidden;padding-top:15px;' id='container_subjects'  ></div>";
         $result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
         $result->fields('fs', array('subject_name'));
         $result->fields('fg', array('grade_name'));
+        $db_or = db_or();
+        $db_or->condition('fg.grade_name', '%' . db_like($params[1]) . '%', 'LIKE');
+        $db_or->condition('fs.subject_name', '%' . db_like($params[1]) . '%', 'LIKE');
+        $db_or->condition('fq.question', '%' . db_like($params[1]) . '%', 'LIKE');        
         $result->fields('fq', array('question','user_id','created','id'));
         $result->condition('fqr.status', 1, '=');
         $result->condition('fq.status', 1, '=')
 			   ->condition('fqr.status', 1, '=')
-			   ->condition('fq.question', '%' . db_like($params[1]) . '%', 'LIKE')->distinct()
+			   ->condition($db_or)
 			   ->execute()
                ->fetchAll();
         $table_sort = $result->extend('TableSort')

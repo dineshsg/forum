@@ -16,7 +16,7 @@
                 ------------------------------------------------*/
                 $query_app = "UPDATE `forum_questions` SET `status`='".$q_status."', `updated` = CURRENT_TIMESTAMP WHERE id = '".$q_id."'";            
                 if(db_query($query_app)){
-                    drupal_set_message('New Question has been posted on Forum');
+                    drupal_set_message('Question has Approved');
                 }else {
                     drupal_set_message('Error !!!!.Please try again.');
                 }
@@ -29,7 +29,7 @@
                 ------------------------------------------------*/
                 $query_rej = "UPDATE `forum_questions` SET `status`='".$q_status."', `updated` = CURRENT_TIMESTAMP WHERE id = '".$q_id."'";            
                 if(db_query($query_rej)){
-                    drupal_set_message('New Question has been Rejected');
+                    drupal_set_message('Question has been Rejected');
                 }else {
                     drupal_set_message('Error !!!!.Please try again.');
                 }
