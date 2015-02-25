@@ -164,14 +164,14 @@ overflow:hidden;padding-top:15px;' id='container_subjects'  ></div>";
             $output .= drupal_render($form_search);
             $output .= theme('table',array('header' => $header,'rows' => $row));
             $output .= theme('pager');
-			$baseurl=base_path()."ask-a-question";
+			$baseurl= base_path()."ask-a-question";
 			$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
        }
        else
 	   {
 			$baseurl1=base_path()."forums";
 			$baseurl=base_path()."ask-a-question";
-	    	$output .= "<div class='sub-title clear'>Invalid Grade and Topic.<a class='btn btn-default' href='".$baseurl1."'>Go Back to Forum</a></div><br /><a href='".$baseurl."' class='btn btn-default' >Ask a question</a>";
+	    	$output .= "<div class='sub-title clear'>Invalid Grade and Topic.</div><div class='col-12 content_down'><a class='btn btn-default' href='".$baseurl1."'>Back to Forum</a>&nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
 	   }
         return $output;
     }

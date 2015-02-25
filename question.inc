@@ -5,13 +5,12 @@
     --------------------------------------*/
 	function ask_a_question_form($form_state)
 	{
-	    global $user;
-			
+	    global $user;		
 		if($user->uid){
 	    $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
         $grd_nm = $result_grade[0]->grade_name;
         $grd_id = $result_grade[0]->id;
-        $option[''] = '----Select----';        
+        $option[''] = '----Select----';
         foreach ($result_grade as $node) {
             $option[$node->id] = $node->grade_name;
         }
@@ -71,8 +70,8 @@
     }
 	
 	function ask_a_question_form_submit($form, &$form_state)
-	{
-		
+	{		
+	
 	    global $user;
 	    $pre_text = escape($form_state['values']['question_desc']);
 		$pre_text2 = htmlentities($form_state['values']['question_desc'],ENT_QUOTES);
@@ -145,9 +144,9 @@
         );
         
         $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
-        //$to = $admin_moderator_id;
+        $to = $admin_moderator_id;
         //$to = 'dineshsgaddi@gmail.com';
-		$to = 'manjiris@winjit.com';
+		//$to = 'manjiris@winjit.com';
         $language = user_preferred_language($user);
         drupal_mail('forum', 'askaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 	}
@@ -257,7 +256,7 @@
 	   {
 			$baseurl1=base_path()."forums";
 			$baseurl=base_path()."ask-a-question";
-	    	$output .= "<div class='sub-title clear'>No questions have been posted.<a href='".$baseurl1."'>Go Back to Forum</a></div><br /><a href='".$baseurl."' class='btn btn-default' >Ask a question</a>";
+	    	$output .= "<div class='sub-title clear'>No questions have been posted.</div><div class='col-12 content_down'><a href='".$baseurl1."'  class='btn btn-default' >Back</a> &nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
 	   }
 	   return $output;
 	}

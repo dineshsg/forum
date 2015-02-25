@@ -5,7 +5,7 @@ jQuery(document).ready(function($) {
 	{
 		$("#ask-a-question-form .form-type-file input").css("padding-left", "155px"); 
 	}
-	/*$('.grade').change(function(){
+	$('.grade').change(function(){
 	    grd = $('.grade').attr('value');
 	    $.ajax({
 	        type : 'POST',
@@ -16,11 +16,12 @@ jQuery(document).ready(function($) {
 			success : function(data){
 			    output = $.parseJSON(data);
 			    var html_data = "";
-			    var html_data = "<option val=''>-- Select --</option>";
+			    var html_data = "<option val=''>-- Select --</option>"; //<select class='required'>
 			    if(output){
 			        $.each($.parseJSON(data), function(idx, obj) {
 			            html_data += "<option value='"+ obj.id +"'>" + obj.subject_name + "</option>";	
                     });
+					 //html_data+= "</select>";
                     $('.subject').html(html_data);
 			    }
 			    else{
@@ -30,7 +31,7 @@ jQuery(document).ready(function($) {
 			
         });
         
-    });*/
+    });
     
     $('.common').click(function() {
         //var grd = $(this).attr('id');

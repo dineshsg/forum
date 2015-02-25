@@ -249,8 +249,7 @@ function forum_mail_alter(&$message) {
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];
                 break;
-            }
-            
+            }            
 	}
 	
 	function forum_init(){
@@ -294,6 +293,7 @@ function forum_mail_alter(&$message) {
 
           if (($form_id === 'user_profile_form' )||($form_id === 'user_register_form'))
           { 
+                $form['account']['name']['#description']='Spaces are allowed, punctuation is not allowed except for periods, hyphens, apostrophes, and underscores.';
                 $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
                 $grd_nm = $result_grade[0]->grade_name;
                 $grd_id = $result_grade[0]->id;
