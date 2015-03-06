@@ -9,9 +9,6 @@ function comment_waiting_for_approval()
         {
             if($c_status==1)
             {
-                /*---------------------------------------------
-                    Question which are approved by the Moderator
-                ------------------------------------------------*/
                 $query_app = "UPDATE `forum_question_reply` SET `status`='".$c_status."', `updated` = CURRENT_TIMESTAMP WHERE id = '".$c_id."'";            
                 if(db_query($query_app)){
                     drupal_set_message('New Comment has been posted on Forum');
@@ -22,9 +19,6 @@ function comment_waiting_for_approval()
             }
             else
             {
-                /*----------------------------------------------
-                    Question which are rejected by the Moderator
-                ------------------------------------------------*/
                 $query_rej = "UPDATE `forum_question_reply` SET `status`='".$c_status."', `updated` = CURRENT_TIMESTAMP WHERE id = '".$c_id."'";            
                 if(db_query($query_rej)){
                     drupal_set_message('New Comment has been Rejected');
@@ -37,9 +31,6 @@ function comment_waiting_for_approval()
         }
         else
         {
-                /*------------------------------------------------------------
-                    List of comment which are waiting for moderators approval
-                --------------------------------------------------------------*/
             if ((in_array('moderator', $user->roles)) || (in_array('admin moderator', $user->roles))||($user->uid == 1))
             {
                 $output = '';
@@ -56,9 +47,6 @@ function comment_waiting_for_approval()
                 $result->fields('fqr', array('reply_message','user_id','created','id'));
                 if (in_array('moderator', $user->roles))
                 {
-                    /*------------------------------------
-                           Check for Moderator Roles
-                    --------------------------------------*/
                     $moderator_query = db_query('SELECT * FROM users_extend WHERE uid = '.$user->uid)->fetchAll();
                     $myArray = explode(',', $moderator_query[0]->subject);
                     $result->condition('fq.subject_id', $myArray, 'IN');
@@ -68,18 +56,12 @@ function comment_waiting_for_approval()
                 }
                 else if(in_array('admin moderator', $user->roles))
                 {
-                    /*------------------------------------
-                         Check for Admin Moderator Roles
-                    --------------------------------------*/
                     $result->condition('fqr.status', 0)
                            ->execute()
                            ->fetchAll();
                 }
                 else
                 {
-                    /*------------------------------------
-                             Check for Other Roles
-                    --------------------------------------*/
                 }
                 $table_sort = $result->extend('TableSort')
                             ->orderByHeader($header);

@@ -5,7 +5,6 @@
         $items['forums'] = array(
 		    'title' => 'Forums',
 		    'page callback' => array('forum'),
-		    #'access arguments' => array('administer list grades'),
 		    'access callback' => TRUE,
 		    'file' => 'forum.inc',
 	    );
@@ -13,7 +12,6 @@
 	    $items['get_subject'] = array(
 		    'title' => '',
 		    'page callback' => array('get_subject'),
-		    #'access arguments' => array('administer list grades'),
 		    'access callback' => TRUE,
 	    );
         
@@ -29,13 +27,11 @@
 		    'title' => 'Question',
 		    'page callback' => 'drupal_get_form',
     	    'page arguments' => array('forum_form'),
-		    #'access arguments' => array('ask a question'),
 	    );
 
         $items['forum/questions'] = array(
-		    'title' => 'List Of All Questions',
+		    'title' => 'Questions',
 		    'page callback' => array('_forum_question'),
-		    #'access arguments' => array('ask a question'),
 		    'access callback' => TRUE,
 		    'file' => 'question.inc',
 	    );
@@ -46,7 +42,6 @@
 		    'access arguments' => array('Question Detail'),
 		    'file' => 'question.inc',
 	    );
-        
         $items['forum/question-reply'] = array(
 		    'title' => 'Reply A Question',
 		    'page callback' => 'drupal_get_form',
@@ -55,7 +50,7 @@
 		    'file' => 'question.inc',
 	    );
         $items['forum/search'] = array(
-		    'title' => 'Reply A Question',
+		    'title' => 'Search',
 		    'page callback' => 'drupal_get_form',
 		    'page arguments' => array('forum_search'),
 		    'access callback' => TRUE,
@@ -73,7 +68,6 @@
 		    'access arguments' => array('Question Moderator Approval'),
     	    'file' => 'approval.inc',
         );
-        
         $items['forum/comment/approval'] = array(
             'title' => 'Comment Waiting For Approval',
 		    'page callback' => array('comment_waiting_for_approval'),
@@ -86,14 +80,12 @@
 		    'access arguments' => array('administer list grades'),
 		    'file' => 'grade.inc',
 	    );
-
         $items['admin/list_subjects'] = array(
 		    'title' => 'List Topics',
 		    'page callback' => array('_list_subjects'),
 		    'access arguments' => array('administer list subjects'),
 		    'file' => 'subjects.inc',
 	    );
-
 	    $items['list/grade/modify'] = array(
 		    'title' => 'Modify Grades',
 		    'page callback' => 'drupal_get_form',
@@ -101,7 +93,6 @@
 		    'access arguments' => array('Modify Grade for Forum'),
 		    'file' => 'grade.inc',
 	    );
-	    
 	    $items['list/grade/delete'] = array(
 		    'title' => 'Delete Grades',
 		    'page callback' => 'drupal_get_form',
@@ -137,20 +128,16 @@
 		    'access arguments' => array('Extensions allowed to upload Attachment'),
 	    );
 	return $items;
-	
 	}
-    
     function forum_form()
     {
-        
     }
-    
     function extensions_allowed_form($form_state)
     {
         $form['ext_allowed'] = array(
             '#type' => 'textfield',
             '#title' => t('Specify file extensions allowed to upload as a attachment on FORUM.'),
-            '#description' => t('Provide file extensions with comma. For example: png, jpg, jpeg'),
+            '#description' => t('Provide file extensions with comma. For example: png, jpg, jpeg, docx, pdf, ods'),
             '#size' => 100,
             '#maxlength' => 255,
             '#required' => TRUE,
@@ -162,10 +149,9 @@
         );
         return $form;
     }
-    
     function extensions_allowed_form_submit($form, &$form_state)
     {
-        variable_set('exten_allowed', $form_state['values']['ext_allowed']);
+        variable_set('exten_allowed', $form_state['values']['ext_allowed']);		
         drupal_set_message(t('Settings updated'), 'status');
     }
     function get_subject()
@@ -182,8 +168,6 @@
         echo json_encode($existing_subject_name);
         exit;   
     }    
-        
-    	
 	function forum_permission(){
 	    return array(
 	        'administer list grades'=> array(
@@ -218,34 +202,19 @@
             ),
         );
 	}
-
-function forum_mail_alter(&$message) {
-    $headers = array(
-        'MIME-Version' => '1.0',
-        'Content-Type' => 'text/html; charset=iso-8859-1; format=flowed',
-        'Content-Transfer-Encoding' => '8Bit',
-        'X-Mailer' => 'Drupal',
-    );
-    foreach ($headers as $key => $value) {
-        $message['headers'][$key] = $value;
-    }
-}
-	
 	function forum_mail($key, &$message, $params)
 	{
+	    
 	    switch ($key) {
             case 'askaquestion':
-              // Set headers etc
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];              
                 break;
             case 'replyaquestion':
-              // Set headers etc
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];              
                 break;
             case 'rejectaquestion':
-              // Set headers etc
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];
                 break;
@@ -256,7 +225,6 @@ function forum_mail_alter(&$message) {
   	  drupal_add_js(array(
           'forum-style' => array(
           'modalSize' => array('type' => 'fixed','width' => 850,'height' => 550,),
-          //Animation mode
           'animation' => 'fadeIn',
           ),
       ), 'setting');
@@ -279,8 +247,9 @@ function forum_mail_alter(&$message) {
 			$subject = explode(',',$query->subject);
 			foreach($subject as $temp_sub)
 			{
-				$subject_t[] = subject($temp_sub);
+				$subject_t[$temp_sub] = subject($temp_sub);
 			}
+			
         }
         else
         {
@@ -292,8 +261,8 @@ function forum_mail_alter(&$message) {
         }
 
           if (($form_id === 'user_profile_form' )||($form_id === 'user_register_form'))
-          {
-                 $form['account']['name']['#description']='Spaces are allowed, punctuation is not allowed except for periods, hyphens, apostrophes, and underscores.'; 
+          { 
+				$form['account']['name']['#description']='Spaces are allowed, punctuation is not allowed except for periods, hyphens, apostrophes, and underscores.';
                 $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
                 $grd_nm = $result_grade[0]->grade_name;
                 $grd_id = $result_grade[0]->id;
@@ -328,8 +297,7 @@ function forum_mail_alter(&$message) {
 			        '#prefix' => '<div id="errmsg"></div>',
 			        
 		        );
-		        if(($user->uid)&&(!in_array('authentcated user', $user->roles)))
-		        {
+		        
                 $form['grade'] = array(
                     '#title' => t('Grade'),
                     '#type' => 'select',
@@ -338,20 +306,36 @@ function forum_mail_alter(&$message) {
                     '#attributes' => array('class' => array('grade')),
                     '#validated' => TRUE,
                 );
+                if(($user->uid)&&(!in_array('authentcated user', $user->roles)))
+		        {
                 $form['subject'] = array(
                     '#title' => t('Topic'),
                     '#type' => 'select',
                     '#multiple' => TRUE,
 					'#default_value' => $subject_t,
-                    //'#options' => array(''=> '-- Select --'),
-					'#options' => $subject_t,
+					'#options' => $subject_t,					
 					'#attributes' => array('class' => array('subject')),
                     '#validated' => TRUE
                 );
                 }
-            }
+                array_unshift($form['#validate'], 'forum_form_validate');
+                }
                 $form['#submit'][] = 'forum_form_alter_submit';
                 return $form;                
+    }
+    function forum_form_validate($form,&$form_state)
+    {
+            if((strlen(trim($form_state['values']['tmobile'])) !=10)||!is_numeric(trim($form_state['values']['tmobile'])))
+            {
+                form_set_error('tmobile', t('Your mobile number is not valid'));
+            }
+            if($form_state['build_info']['form_id'] == 'user_profile_form')
+            {
+            if(!$form_state['values']['subject'])
+            {
+                form_set_error('subject', t('Please select a proper topic.'));
+            }
+            }
     }
     function forum_form_alter_submit($form_state,$form_id)
     {
@@ -360,9 +344,9 @@ function forum_mail_alter(&$message) {
         $fname = $form_state['tfname']['#value'];
         $lname = $form_state['tlname']['#value'];
         $mobile = $form_state['tmobile']['#value'];
+		$selected_subjects = implode(",",$form_state['subject']['#value']);
         if($form_state['subject']['#value'])
         {
-            $selected_subjects = implode(",",$form_state['subject']['#value']);
             if($form_id['build_info']['form_id'] == 'user_register_form')
             { 
                 $add_u = db_query("SELECT max(uid) as usr FROM users")->fetchAll();
@@ -372,6 +356,7 @@ function forum_mail_alter(&$message) {
             {
                 $user_add = arg(1);
             }
+            
             $user_db_exist = db_query('SELECT count(*) as cnt FROM users_extend WHERE uid='.$user_add)->fetchAll();
             if($user_db_exist[0]->cnt > 0)
             {
@@ -401,14 +386,16 @@ function forum_mail_alter(&$message) {
             {
                 $user_add = arg(1);
             }
+            $grade = $form_state['grade']['#value'];
             $user_db_exist = db_query('SELECT count(*) as cnt FROM users_extend WHERE uid='.$user_add)->fetchAll();
+            
             if($user_db_exist[0]->cnt > 0)
             {
-                $query = "UPDATE `users_extend` SET `fname`='".$fname."',`lname`='".$lname."',`mobile`='".$mobile."',`grade`='0',`subject`='0' WHERE uid = '".$user_add."'";
+                $query = "UPDATE `users_extend` SET `fname`='".$fname."',`lname`='".$lname."',`mobile`='".$mobile."',`grade`='".$grade."',`subject`='0' WHERE uid = '".$user_add."'";
             }
             else
             {
-                $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user_add."', '".$fname."', '".$lname."','".$mobile."', '0', '0')";
+                $query = "INSERT INTO `users_extend` (`uid`, `fname`, `lname`, `mobile`, `grade`, `subject`) VALUES ('".$user_add."', '".$fname."', '".$lname."','".$mobile."', '".$grade."', '0')";
             }    
             if(db_query($query))
             {
@@ -429,8 +416,9 @@ function forum_mail_alter(&$message) {
     
     function grade($grade)
     {
+	
         $grade_query = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grade)->fetchAll();
-        if($grade_query->rowCount > 0)
+	  	if($grade_query)
         {
             return $grade_query[0]->grade_name;
         }
@@ -465,10 +453,13 @@ function forum_mail_alter(&$message) {
         {
             $mail_id = db_query("SELECT u.mail FROM users_roles as ur, users u, users_extend ue WHERE ur.rid = '".$rid."' AND ur.uid = u.uid AND ur.uid = ue.uid AND ue.grade = '".$grade."' AND FIND_IN_SET('".$subject."',ue.subject) > 0");
         }
+        else if($role == 'teacher')
+        {
+            $mail_id = db_query("SELECT u.mail FROM users_roles as ur, users u, users_extend ue WHERE ur.rid = '".$rid."' AND ur.uid = u.uid AND ur.uid = ue.uid AND ue.grade = '".$grade."' AND FIND_IN_SET('".$subject."',ue.subject) > 0");
+        }
         while($role_mail = $mail_id->fetchObject())
         {
             $temp[] = $role_mail->mail;
-            
         }
         if (count($temp) === 1) 
         {

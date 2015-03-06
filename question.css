@@ -153,6 +153,7 @@ border-radius: 0px 5px 5px 0;px;
 .sticky-table td.active{
 	background-color: #eee;
 }
+
 @media screen and (min-width:500px) and (max-width:800px)   {
 	.grade, .grade1{
 		width:49% !important;
@@ -170,6 +171,9 @@ border-radius: 0px 5px 5px 0;px;
 	}
 	#forum-search .form-item-search{
 	padding-left:80px;
+	}
+	.sticky-table td,.sticky-table td a{
+		font-size:15px !important;
 	}
 }
 
@@ -204,7 +208,11 @@ border-radius: 0px 5px 5px 0;px;
 	#forum-search #edit-submit{
 		padding: 16px 0.9em 16px;		
 	}
+	.sticky-table td,.sticky-table td a{
+		font-size:11px !important;
+	}
 }
+
 @media screen and (max-width:380px)  {
 	.form-item-search #edit-search {
 		width:215px;		
