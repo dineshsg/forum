@@ -2,6 +2,16 @@
 	function ask_a_question_form($form_state)
 	{
 	    global $user;		
+	    $subject_t = array();
+	    $student_ask_q = db_query("SELECT grade,subject FROM users_extend WHERE uid=".$user->uid);
+	    $subjects = explode(',',$student_ask_q->subject);
+			foreach($subjects as $temp_sub)
+			{
+				$subject_t[$temp_sub] = subject($temp_sub);
+			}
+	    var_dump($student_ask_q->grade);
+	    var_dump($subject_t);
+	    die;
 		if($user->uid){
 	    $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
         $grd_nm = $result_grade[0]->grade_name;
@@ -210,13 +220,11 @@
 	   }
 	   else
 	   {
-	       $res_grades = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grades);
-		   $row_grades = $res_grades->fetchObject();
-		   $res_topics = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subjects);
-		   $row_topics = $res_topics->fetchObject();
+	       $res_grades = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grades)->fetchObject();
+		   $res_topics = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subjects)->fetchObject();
 		   $output .= "<div class='font-100 custom_font content_down sub-title'>
-  	                    Grade :<label class='font_black font-100'> ".$row_grades->grade_name." </label> &nbsp; &nbsp;
-  	                    Topic :<label class='font_black font-100'> ".$row_topics->subject_name." </label> 
+  	                    Grade :<label class='font_black font-100'> ".$res_grades->grade_name." </label> &nbsp; &nbsp;
+  	                    Topic :<label class='font_black font-100'> ".$res_topics->subject_name." </label> 
   	                  </div>";	     
 	       $result = db_select('forum_questions','fq');
 		   $result->distinct();
@@ -418,16 +426,17 @@
 		$message = array('0'=>t('Dear Moderator,<br><br>A question has been posted on forums and is waiting for your reply<br>
                                          Grade: '.grade($stu_query->grade_id).'<br>
                                          Topic: '.subject($stu_query->subject_id).'<br>
-                                         Question: '.$stu_query->question.'')); // Body of your email here.
+                                         Question: '.$stu_query->question.''));
         $params = array(
             'body' => $message,
             'subject' => 'Answer For Your Question Posted on Forum',
             'headers'=>'simple',
         );
-        //$to = "dineshsgaddi@gmail.com";
-		$to = "manjiris@winjit.com";
+        $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
+        $moderator_id = role_mail('moderator',$form_state['values']['grade'],$form_state['values']['subject']);
+        $to = $admin_moderator_id.','.$moderator_id;
         $language = user_preferred_language($user);
         drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
-        drupal_goto('forum/questions/'.$stu_query->grade_id.'/'.$stu_query->subject_id.'/');
+        drupal_goto('forums');
     }
 ?>

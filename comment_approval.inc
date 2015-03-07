@@ -15,6 +15,22 @@ function comment_waiting_for_approval()
                 }else {
                     drupal_set_message('Error !!!!.Please try again.');
                 }
+                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fqr.question_id = fq.id")->fetchObject();
+                $message = array('0'=>t('Dear User,<br><br>Your question has been replied on forum<br>
+                                 Grade: '.grade($question_detail->grade_id).'<br>
+                                 Topic: '.subject($question_detail->subject_id).'<br>
+                                 Question: '.$question_detail->question.'<br>
+                                 ')); 
+                $params = array(
+                    'body' => $message,
+                    'subject' => 'Your Question Posted on Forum has been replied',
+                );
+                $question_id = db_query("SELECT question_id FROM forum_question_reply WHERE id = ".$c_id)->fetchObject();
+                $stu_mail_id = student_mail($question_id->question_id);
+                //$to = 'dineshsgaddi@gmail.com';
+                $to = $stu_mail_id;
+                $language = user_preferred_language($user);
+                drupal_mail('forum', 'replytoquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);        
                 drupal_goto('forum/comment/approval');
             }
             else
@@ -25,6 +41,22 @@ function comment_waiting_for_approval()
                 }else {
                     drupal_set_message('Error !!!!.Please try again.');
                 }
+                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fqr.question_id = fq.id")->fetchObject();
+                $message = array('0'=>t('Dear Teacher,<br><br>Your question has been rejected by Moderator<br>
+                                 Grade: '.grade($question_detail->grade_id).'<br>
+                                 Topic: '.subject($question_detail->subject_id).'<br>
+                                 Question: '.$question_detail->question.'<br>
+                                 ')); 
+                $params = array(
+                    'body' => $message,
+                    'subject' => 'Your Question Posted on Forum has been replied',
+                );
+                $question_id = db_query("SELECT question_id FROM forum_question_reply WHERE id = ".$c_id)->fetchObject();
+                $teacher_mail_id = student_mail($question_id->question_id);
+                //$to = 'dineshsgaddi@gmail.com';
+                $to = $teacher_mail_id;
+                $language = user_preferred_language($user);
+                drupal_mail('forum', 'replytoquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);        
                 drupal_goto('forum/comment/approval');
             }
             
@@ -60,9 +92,14 @@ function comment_waiting_for_approval()
                            ->execute()
                            ->fetchAll();
                 }
-                else
+                else if(in_array('administrator', $user->roles))
                 {
+                    $result->condition('fqr.status', 0)
+                           ->execute()
+                           ->fetchAll();
                 }
+                else
+                {}
                 $table_sort = $result->extend('TableSort')
                             ->orderByHeader($header);
                 $pager = $table_sort->extend('PagerDefault')

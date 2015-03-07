@@ -218,6 +218,10 @@
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];
                 break;
+            case 'replytoquestion':
+                $message['subject'] = $params['subject'];
+                $message['body'] = $params['body'];
+                break;
             }            
 	}
 	
@@ -266,7 +270,7 @@
                 $result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
                 $grd_nm = $result_grade[0]->grade_name;
                 $grd_id = $result_grade[0]->id;
-                $option[''] = '----Select----';        
+                $option['0'] = '----Select----';        
                 foreach ($result_grade as $node) {
                     $option[$node->id] = $node->grade_name;
                 }
@@ -308,15 +312,15 @@
                 );
                 if(($user->uid)&&(!in_array('authentcated user', $user->roles)))
 		        {
-                $form['subject'] = array(
-                    '#title' => t('Topic'),
-                    '#type' => 'select',
-                    '#multiple' => TRUE,
-					'#default_value' => $subject_t,
-					'#options' => $subject_t,					
-					'#attributes' => array('class' => array('subject')),
-                    '#validated' => TRUE
-                );
+                    $form['subject'] = array(
+                        '#title' => t('Topic'),
+                        '#type' => 'select',
+                        '#multiple' => TRUE,
+					    '#default_value' => $subject_t,
+					    '#options' => $subject_t,					
+					    '#attributes' => array('class' => array('subject')),
+                        '#validated' => TRUE
+                    );
                 }
                 array_unshift($form['#validate'], 'forum_form_validate');
                 }
@@ -331,10 +335,10 @@
             }
             if($form_state['build_info']['form_id'] == 'user_profile_form')
             {
-            if(!$form_state['values']['subject'])
-            {
-                form_set_error('subject', t('Please select a proper topic.'));
-            }
+                if(!$form_state['values']['subject'])
+                {
+                    form_set_error('subject', t('Please select a proper topic.'));
+                }
             }
     }
     function forum_form_alter_submit($form_state,$form_id)
@@ -347,6 +351,11 @@
 		$selected_subjects = implode(",",$form_state['subject']['#value']);
         if($form_state['subject']['#value'])
         {
+            if($form_state['subject']['#value']['-Select-'] == '-Select-')
+		    {
+		        
+		        $form_state['subject']['#value'] = '0';
+		    }
             if($form_id['build_info']['form_id'] == 'user_register_form')
             { 
                 $add_u = db_query("SELECT max(uid) as usr FROM users")->fetchAll();
@@ -356,7 +365,6 @@
             {
                 $user_add = arg(1);
             }
-            
             $user_db_exist = db_query('SELECT count(*) as cnt FROM users_extend WHERE uid='.$user_add)->fetchAll();
             if($user_db_exist[0]->cnt > 0)
             {
@@ -470,5 +478,10 @@
             $grp_mail = implode(",",$temp);
         }
         return $grp_mail;
+    }
+    function student_mail($q_id)
+    {
+        $stu_mail_id = db_query("SELECT mail FROM forum_questions fq, users u WHERE fq.id = '".$q_id."' AND fq.user_id = u.uid")->fetchObject();
+        return $stu_mail_id->mail;
     }
 ?>
