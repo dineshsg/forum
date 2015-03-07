@@ -348,14 +348,18 @@
         $fname = $form_state['tfname']['#value'];
         $lname = $form_state['tlname']['#value'];
         $mobile = $form_state['tmobile']['#value'];
-		$selected_subjects = implode(",",$form_state['subject']['#value']);
+        if($form_state['subject']['#value']['-Select-'] == '-Select-')
+        {
+            $form_state['subject']['#value']['-Select-'] = '0';
+            $form_state['subject']['#value'] = $form_state['subject']['#value']['-Select-'];
+		}
+		else
+		{
+		    $selected_subjects = implode(",",$form_state['subject']['#value']);
+		}
+		    
         if($form_state['subject']['#value'])
         {
-            if($form_state['subject']['#value']['-Select-'] == '-Select-')
-		    {
-		        
-		        $form_state['subject']['#value'] = '0';
-		    }
             if($form_id['build_info']['form_id'] == 'user_register_form')
             { 
                 $add_u = db_query("SELECT max(uid) as usr FROM users")->fetchAll();
@@ -365,6 +369,12 @@
             {
                 $user_add = arg(1);
             }
+            
+		    {
+		        $form_state['subject']['#value']['-Select-'] = '0';
+		        $form_state['subject']['#value'] = $form_state['subject']['#value']['-Select-'];
+		        var_dump($form_state['subject']['#value']);
+		    }
             $user_db_exist = db_query('SELECT count(*) as cnt FROM users_extend WHERE uid='.$user_add)->fetchAll();
             if($user_db_exist[0]->cnt > 0)
             {
@@ -394,6 +404,10 @@
             {
                 $user_add = arg(1);
             }
+            if($form_state['subject']['#value']['-Select-'] == '-Select-')
+		    {
+		        $form_state['subject']['#value']['-Select-'] = '0';
+		    }
             $grade = $form_state['grade']['#value'];
             $user_db_exist = db_query('SELECT count(*) as cnt FROM users_extend WHERE uid='.$user_add)->fetchAll();
             
