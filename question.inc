@@ -269,11 +269,11 @@
                 }
                 if(user_is_logged_in())
 		        {
-			    $row[] = array(l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
+			    $row[] = array(l(truncate_chars($item->question,10),'forum/question-detailkjkj/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
 			    }
 			    else
 			    {
-    	        $row[] = array(l(".$item->question.",'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
+    	        $row[] = array(l(truncate_chars($item->question,10),'forum/question-detail/'.$item->id.''),$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
 			    }
             }
             $output .= theme('table',array('header' => $header,'rows' => $row));
@@ -282,8 +282,8 @@
    	        {}
    	        else
 	        {
-			$baseurl=base_path()."ask-a-question";
-			$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
+			    $baseurl=base_path()."ask-a-question";
+			    $output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
 			}
        }
        else
@@ -302,6 +302,7 @@
     function _question()
     {
         global $user;
+        global $base_url;
         $account = $user;
         $question_id = arg(2);
         $output = '';
@@ -377,11 +378,19 @@
             }
 			
         }
-        $output .= "<div class='space'>";
-        $output .= drupal_render($form_question);
-		$prev_url=base_path()."forum/questions/".$row->grade_id."/".$row->subject_id;
-		$output .= "<a href='".$prev_url."'  class='btn btn-default content_down' > Go to ".$grade_name." &amp; ".$subject_name."</a><br><br>";
-        $output .= "</div></div></div>";
+        if((in_array('admin moderator',$user->roles))||(in_array('moderator',$user->roles)))
+        {
+           $output.="<div class='col-12'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default'>Reject</a></div>"; 
+        }
+        else
+        {
+                $output .= "<div class='space'>";
+                $output .= drupal_render($form_question);
+		        $prev_url=base_path()."forum/questions/".$row->grade_id."/".$row->subject_id;
+		        $output .= "<a href='".$prev_url."'  class='btn btn-default content_down' > Go to ".$grade_name." &amp; ".$subject_name."</a><br><br>";
+                $output .= "</div>";
+        }
+        $output .= "</div><br></div>";
         }
         else
         {

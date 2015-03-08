@@ -462,7 +462,14 @@
             return '';
         }
     }
-    
+    function truncate_chars($text, $limit, $ellipsis = '...')
+    {
+        if( strlen($text) > $limit )
+        {
+            $text = trim(substr($text, 0, $limit)) . $ellipsis; 
+        }
+    return $text;
+    }
     function role_mail($role, $grade, $subject)
     {
         $rid = array_search($role, user_roles());

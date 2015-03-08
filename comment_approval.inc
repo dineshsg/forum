@@ -117,7 +117,7 @@ function comment_waiting_for_approval()
                         $user_post = user_load($item->user_id);
                         $username = $user_post->name;
                         $date_ago = ago($item->created);
-                        $row[] = array($item->question,$item->reply_message,$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1').' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1'));
+                        $row[] = array(truncate_chars($item->question,10),truncate_chars($item->reply_message,10),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1').' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1'));
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
                     $output .= theme('pager');
