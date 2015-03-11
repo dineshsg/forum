@@ -13,9 +13,9 @@ function comment_waiting_for_approval()
                 if(db_query($query_app)){
                     drupal_set_message('New Comment has been posted on Forum');
                 }else {
-                    drupal_set_message('Error !!!!.Please try again.');
+                    drupal_set_message('Error !!!!.Please try again.','error');
                 }
-                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fqr.question_id = fq.id")->fetchObject();
+                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fq.id = fqr.question_id")->fetchObject();
                 $message = array('0'=>t('Dear User,<br><br>Your question has been replied on forum<br>
                                  Grade: '.grade($question_detail->grade_id).'<br>
                                  Topic: '.subject($question_detail->subject_id).'<br>
@@ -51,9 +51,8 @@ function comment_waiting_for_approval()
                     'body' => $message,
                     'subject' => 'Your Question Posted on Forum has been replied',
                 );
-                $question_id = db_query("SELECT question_id FROM forum_question_reply WHERE id = ".$c_id)->fetchObject();
-                $teacher_mail_id = student_mail($question_id->question_id);
-                //$to = 'dineshsgaddi@gmail.com';
+                $question_id = db_query("SELECT user_id FROM forum_question_reply WHERE id = ".$c_id)->fetchObject();
+                $teacher_mail_id = user_load($question_id->user_id);
                 $to = $teacher_mail_id;
                 $language = user_preferred_language($user);
                 drupal_mail('forum', 'replytoquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);        
@@ -74,13 +73,21 @@ function comment_waiting_for_approval()
                             array('data' =>'Action', 'field' => '', 'sort' => 'asc')
                             );
                 $result = db_select('forum_questions','fq');
+                $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
+                $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
+                $result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
+                $result->fields('fq', array('question','user_id','created'));
+                $result->fields('fqr', array('reply_message','user_id','created','id','question_id'));
+				$result->condition('fq.status',1,'=');
+                /*$result = db_select('forum_questions','fq');
                 $result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
                 $result->fields('fq', array('question'));
-                $result->fields('fqr', array('reply_message','user_id','created','id'));
+                $result->fields('fqr', array('reply_message','user_id','created','id','question_id'));
+                $result->condition('fq.status',1,'=');*/
                 if (in_array('moderator', $user->roles))
                 {
-                    $moderator_query = db_query('SELECT * FROM users_extend WHERE uid = '.$user->uid)->fetchAll();
-                    $myArray = explode(',', $moderator_query[0]->subject);
+                    $moderator_query = db_query('SELECT * FROM users_extend WHERE uid = '.$user->uid)->fetchObject();
+                    $myArray = explode(',', $moderator_query->subject);
                     $result->condition('fq.subject_id', $myArray, 'IN');
                     $result->condition('fqr.status', 0)
                            ->execute()
@@ -117,7 +124,7 @@ function comment_waiting_for_approval()
                         $user_post = user_load($item->user_id);
                         $username = $user_post->name;
                         $date_ago = ago($item->created);
-                        $row[] = array(truncate_chars($item->question,10),truncate_chars($item->reply_message,10),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1').' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1'));
+                        $row[] = array('<a href="../comment-detail/'.$item->question_id.'/'.$item->id.'/">'.truncate_chars($item->question,25).'</a>',truncate_chars($item->reply_message,25),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1').' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1'));
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
                     $output .= theme('pager');

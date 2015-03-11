@@ -1,3 +1,4 @@
+
 <?php
 
 	function forum_menu(){
@@ -41,6 +42,12 @@
 		    'page callback' => array('_question'),
 		    'access arguments' => array('Question Detail'),
 		    'file' => 'question.inc',
+	    );
+	    $items['forum/comment-detail'] = array(
+		    'title' => 'Question Detail',
+		    'page callback' => array('_comment'),
+		    'access arguments' => array('Question Detail'),
+		    'file' => 'comment.inc',
 	    );
         $items['forum/question-reply'] = array(
 		    'title' => 'Reply A Question',
@@ -202,6 +209,18 @@
             ),
         );
 	}
+	function forum_mail_alter(&$message) {
+        $headers = array(
+            'MIME-Version' => '1.0',
+            'Content-Type' => 'text/html; charset=iso-8859-1; format=flowed',
+            'Content-Transfer-Encoding' => '8Bit',
+            'X-Mailer' => 'Drupal',
+        );
+        foreach ($headers as $key => $value) {
+            $message['headers'][$key] = $value;
+        }
+    }
+
 	function forum_mail($key, &$message, $params)
 	{
 	    
@@ -219,6 +238,10 @@
                 $message['body'] = $params['body'];
                 break;
             case 'replytoquestion':
+                $message['subject'] = $params['subject'];
+                $message['body'] = $params['body'];
+                break;
+			case 'postedquestion':
                 $message['subject'] = $params['subject'];
                 $message['body'] = $params['body'];
                 break;
@@ -252,8 +275,7 @@
 			foreach($subject as $temp_sub)
 			{
 				$subject_t[$temp_sub] = subject($temp_sub);
-			}
-			
+			}			
         }
         else
         {
@@ -309,6 +331,7 @@
 					'#default_value' => $grade,
                     '#attributes' => array('class' => array('grade')),
                     '#validated' => TRUE,
+                    '#required' => TRUE,
                 );
                 if(($user->uid)&&(!in_array('authentcated user', $user->roles)))
 		        {
@@ -333,6 +356,10 @@
             {
                 form_set_error('tmobile', t('Your mobile number is not valid'));
             }
+            if($form_state['values']['grade']=='0')
+            {
+                form_set_error('grade', t('Grade is required!'));
+            }
             if($form_state['build_info']['form_id'] == 'user_profile_form')
             {
                 if(!$form_state['values']['subject'])
@@ -348,10 +375,10 @@
         $fname = $form_state['tfname']['#value'];
         $lname = $form_state['tlname']['#value'];
         $mobile = $form_state['tmobile']['#value'];
-        if($form_state['subject']['#value']['-Select-'] == '-Select-')
+        if($form_state['subject']['#value'] == '-Select-')
         {
-            $form_state['subject']['#value']['-Select-'] = '0';
-            $form_state['subject']['#value'] = $form_state['subject']['#value']['-Select-'];
+            $form_state['subject']['#value'] = '0';
+            //$form_state['subject']['#value'] = $form_state['subject']['#value'];
 		}
 		else
 		{
@@ -452,10 +479,10 @@
     
     function subject($subject)
     {
-        $subject_query1 = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subject)->fetchAll();
-        if($subject_query1)
+        if($subject)
         {
-            return $subject_query1[0]->subject_name;
+			$subject_query1 = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subject)->fetchObject();
+            return $subject_query1->subject_name;
         }
         else
         {

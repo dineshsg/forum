@@ -37,6 +37,7 @@
     margin-left: auto !important;
     margin-right: auto !important;
 }*/
+
 .table-striped td
 {
     border-right: none !important;
@@ -55,6 +56,16 @@
 {
     width:18px;
 }
+/**************/
+/*  Define the background color for all the ODD background rows  
+	.table-striped tr:nth-child(odd){ 
+		background: #b8d1f3;
+	}*/
+	/*  Define the background color for all the EVEN background rows  
+	.table-striped tr:nth-child(even){
+		background: #dae5f4;
+	}*/
+/**************/
 /*.user-name
 {
     padding-top:23px !important;

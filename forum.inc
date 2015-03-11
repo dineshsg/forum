@@ -46,7 +46,7 @@
             {
 		
 			    $output .= "<div class='grade1 common' id= '".$row->id."' target='".$count."'>
-			            	<div class='thumb' style='background-image:url(./images/grades/".$img.");cursor:pointer;' >        	
+			            	<div class='thumb' style='background-image:url(./images/grades/".$img.");cursor:pointer;' >       	
 			               	&nbsp; 
             				</div><div class='caption content-font common' id='title".$row->id."'  target='".$count."' style='cursor:pointer;'>".$row->grade_name."
 			            	</div></div>";
@@ -139,7 +139,8 @@
 	       {
 			    $baseurl1=base_path()."forums";
 			    $baseurl=base_path()."ask-a-question";
-	        	$output .= "<div class='sub-title clear'>Invalid Grade and Topic.</div><div class='col-12 content_down'><a class='btn btn-default' href='".$baseurl1."'>Back to Forum</a>&nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
+	        	/*$output .= "<div class='sub-title clear'>Invalid Grade and Topic.</div><div class='col-12 content_down'><a class='btn btn-default' href='".$baseurl1."'>Back to Forum</a>&nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";*/
+				$output .= "<div class='sub-title clear'>No search results found</div><div class='col-12 content_down'><a class='btn btn-default' href='".$baseurl1."'>Back to Forum</a>&nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
 	       }
 	   
         return $output;
