@@ -155,7 +155,7 @@
 						else
 							$link="-";
 						}
-						$row[] = array($item->grade_name,$item->subject_name,'<a href="../question-detail/'.$item->id.'/">'.truncate_chars($item->question,10).'</a>',$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question/approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
+						$row[] = array($item->grade_name,$item->subject_name,'<a href="../question-det-approval/'.$item->id.'/">'.truncate_chars($item->question,10).'</a>',$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question-det-approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
                     $output .= theme('pager');

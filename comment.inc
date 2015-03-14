@@ -17,8 +17,8 @@ function _comment()
   	        while($rows = $question_detail->fetchObject()){
 			    $grade_name=$rows->grade_name;
 			    $subject_name=$rows->subject_name;
-		        $output .= "<div class='col-12'>
-		                        <div class='img_bg border_blue'>
+		        $output .= "<div class='col-12 img_bg border_blue'>
+		                        
 		                            <div class='space'>
   	                                    <div class='font-100 custom_font2 content_down '>
   	                                    Grade :<label class='font_black font-300'> ".$rows->grade_name." </label> &nbsp; &nbsp;              
@@ -39,10 +39,10 @@ function _comment()
 		 			
                 $output .= "<div class='content-font'>
                                 <div>Question:</div>
-                                <h5 class='font-300 font-black'><p style='text-indent: auto;'><strong>".nl2br($rows->question)."</strong></p></h5>";
+                                <h5 class='font-300 font-black'><p style='text-indent:auto;'><strong>".nl2br($rows->question)."</strong></p></h5>";
 				        		while($rows_attach = $res_attachment->fetchObject()){
 		 		        			if($rows_attach->file_name)	
-		 		        				$output .="<a href='../../".$rows_attach->file_name."' target='_blank' class='font_blue'>See file attached</a><br />";
+		 		        				$output .="<a href='".base_path().$rows_attach->file_name."' target='_blank' class='font_blue'>See file attached</a><br />";
 				            		}
 			    $output .="</div></div>";	
             }
@@ -69,9 +69,9 @@ function _comment()
             }
 			
         }
-        if((in_array('admin moderator',$user->roles))||(in_array('moderator',$user->roles)))
+        if((in_array('admin moderator',$user->roles))||(in_array('moderator',$user->roles)) ||(in_array('administrator',$user->roles)))
         {
-           $output.="<div class='col-12'><a href='".$base_url."/forum/comment/approval/".$comment_id."/1/' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/comment/approval/".$comment_id."/-1/' class='btn btn-default'>Reject</a></div>"; 
+           $output.="<div class='space'><a href='".$base_url."/forum/comment/approval/".$comment_id."/1/' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/comment/approval/".$comment_id."/-1/' class='btn btn-default'>Reject</a><br><br></div>"; 
         }
         else
         {

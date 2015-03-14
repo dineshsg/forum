@@ -49,9 +49,6 @@
 		 {
 			$subject=array(''=>'');
 		 }
-		//var_dump($subject);
-		//var_dump($user);
-		//die;
         $form['grade'] = array(
             '#title' => t('Grade'),
             '#type' => 'select',
@@ -64,8 +61,6 @@
         $form['subject'] = array(
             '#title' => t('Topic'),
             '#type' => 'select',
-			/*'#default_value'=>$subject, 
-            '#options' => array(''=>''), */
 			'#options' => $subject,
             '#attributes' => array('class' => array('subject','dropdown-forum')),
             '#validated' => TRUE,
@@ -100,11 +95,38 @@
 	}
     function ask_a_question_form_validate($form, $form_state)
     {
+        global $user;
+
         if(($form_state['values']['grade'] == '')||($form_state['values']['grade'] == '-Select-')) { 
             form_set_error('grade', t('Please select a Grade.')); 
         }
         if(($form_state['values']['subject'] == '')||($form_state['values']['subject'] == '-Select-')) { 
             form_set_error('subject', t('Please select a Topic.')); 
+        }
+        if(($form_state['values']['grade'])&&($form_state['values']['subject'])&&(!in_array('administrator',$user->roles)))
+        {
+            $stu_grade_query = db_query("SELECT count(uid) as u_cnt,grade FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$form_state['values']['grade']."'")->fetchObject();
+			$stu_subject_query = db_query("SELECT count(uid) as u_cnt,subject FROM users_extend WHERE uid = '".$user->uid."' AND FIND_IN_SET('".$form_state['values']['subject']."',subject)")->fetchObject();
+			
+            if(!$stu_grade_query->u_cnt || !$stu_subject_query->u_cnt)
+            {
+				if(!$stu_grade_query->grade && !$stu_subject_query->subject)
+				{
+					form_set_error('grade','You are not assigned to this particular Grade and Topic to post question');
+					form_set_error('subject');
+				}
+				else
+				{
+					if(!$stu_grade_query->grade)
+					{ 
+						form_set_error('grade','You are not assigned to this particular Grade to post question');
+					}
+					else if(!$stu_subject_query->subject)
+					{
+						form_set_error('subject','You are not assigned to this particular Subject to post question');
+					}
+				}
+            }
         }
         foreach($_FILES['files']['name'] as $key => $name)
         {
@@ -173,9 +195,9 @@
             }
         }
         
-        $query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text2."', '".$user->uid."', '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
-	    if(db_query($query))
-	    {
+        $forum_question_query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text2."', '".$user->uid."', '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
+	    if(db_query($forum_question_query))
+	    {			
 		    drupal_set_message('New Question has been posted Successfully');
 		}
 		else
@@ -201,10 +223,19 @@
         
         $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
         $moderator_id = role_mail('moderator',$form_state['values']['grade'],$form_state['values']['subject']);
-        //$to = $admin_moderator_id.','.$moderator_id;
-        $to = 'dineshsgaddi@gmail.com';
+		if($moderator_id)
+		{
+        	$to = $admin_moderator_id.','.$moderator_id;
+		}
+		else
+		{
+			$to = $admin_moderator_id;
+			
+		}
+        //$to = 'dineshsgaddi@gmail.com,manjiris@winjit.com';
         $language = user_preferred_language($user);
-        drupal_mail('forum', 'askaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);        
+        drupal_mail('forum', 'askaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
+		drupal_goto("forum/questions/".$form_state['values']['grade']."/".$form_state['values']['subject']."/");        
     }
 	function forum()
 	{
@@ -214,27 +245,32 @@
 	{   
 	   global $base_path;
 	   global $user;
+	   $usr = $user->uid;
 	   $grades = arg(2);
 	   $subjects = arg(3);
 	   $output = '';
-	   if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || (in_array('teacher',$user->roles)) || (in_array('administrator',$user->roles)))
+	   if (($grades)||($subjects))
 	   {
+		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$usr.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
+	    if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
+	    {
 		   $header = array(
 							array('data' => 'Question', 'field' => 'question', 'sort' => 'desc'),
 							array('data' => 'File', 'field' => 'id', 'sort' => 'asc'),
 							array('data' => 'Posted By', 'field' => 'created', 'sort' => 'desc'),
 							array('data' => 'Status'),
 						  );
-	   }
-	   else
-	   {
+	    }
+	    else
+	    {
 		   $header = array(
 							array('data' => 'Question', 'field' => 'question', 'sort' => 'desc'),
 							array('data' => 'File', 'field' => 'id', 'sort' => 'asc'),
 							array('data' => 'Posted By', 'field' => 'created', 'sort' => 'desc'),
 						  );
-	   }
-	   if (!($grades)||!($subjects))
+	    }
+	   
+	   if(!($grades)||!($subjects))
 	   {
            $result = db_select('forum_questions','fq');
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
@@ -259,6 +295,7 @@
 	   }
 	   else
 	   {
+	       
 	       $res_grades = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grades)->fetchObject();
 		   $res_topics = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subjects)->fetchObject();
 		   $output .= "<div class='font-100 custom_font content_down sub-title'>
@@ -269,7 +306,7 @@
 		   $result->distinct();
            $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
            $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
-		   if(!user_is_logged_in())
+		   if((!in_array('teacher',$user->roles))&&(!in_array('admin moderator',$user->roles))&&(!in_array('moderator',$user->roles))&&(!in_array('administrator',$user->roles)))
 		   {
 				$result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
 				$result->condition('fqr.status', 1, '=');
@@ -287,67 +324,74 @@
            $pager = $table_sort->extend('PagerDefault')
                   ->orderBy('created', 'DESC')
                   ->limit(5);
-			
            $result = $pager->execute();
+           
 	   }
 	   if($result->rowCount() > 0)
 	   {
-	        while ($item = $result->fetch())
-            {
-                $query_user = user_load($item->user_id);
-                $query_username = $query_user->name;
-                $date_ago = ago($item->created);
-                $comment_query = db_query("SELECT count(*) as cmt_count FROM forum_question_reply WHERE question_id='".$item->id."'")->fetchObject();
-                if($comment_query->cmt_count > 0)
-                {
-                    $comment_status = "<span>&#10004;</span>";
-                }
-                else
-                {
-                    $comment_status = "<span><strong>pending</strong></span>";
-                }
-				////////////////
-				$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);
-				$link="-";
-				while ($row_attachment = $attacment_query->fetchObject())
-				{					
-					if($row_attachment->file_name)
-						$link="<a href='".base_path().$row_attachment->file_name."' target='_blank'>File</a>";
+				while ($item = $result->fetch())
+				{
+					$query_user = user_load($item->user_id);
+					$query_username = $query_user->name;
+					$date_ago = ago($item->created);
+					$comment_query = db_query("SELECT count(*) as cmt_count FROM forum_question_reply WHERE question_id='".$item->id."'")->fetchObject();
+					if($comment_query->cmt_count > 0)
+					{
+						$comment_status = "<span>&#10004;</span>";
+					}
 					else
-						$link="-";
+					{
+						$comment_status = "<span><strong>pending</strong></span>";
+					}
+					$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);
+					$link="-";
+					while ($row_attachment = $attacment_query->fetchObject())
+					{					
+						if($row_attachment->file_name)
+							$link="<a href='".base_path().$row_attachment->file_name."' target='_blank'>File</a>";
+						else
+							$link="-";
+					}
+					if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
+					{
+					$row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
+					}
+					else
+					{
+					$row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
+					}
 				}
-				////////////////
-                //if(user_is_logged_in())
-				if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || (in_array('teacher',$user->roles)) || (in_array('administrator',$user->roles)))
-		        {
-			    $row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
-			    }
-			    else
-			    {
-    	        $row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
-			    }
-            }
-            $output .= theme('table',array('header' => $header,'rows' => $row));
-            $output .= theme('pager');
-			if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || (in_array('teacher',$user->roles)))
-   	        {}
-   	        else
-	        {
-			    $baseurl=base_path()."ask-a-question";
-			    $output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
-			}
-       }
-       else
-	   {
-	        if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)))
-	        {}
-	        else
-	        {
-			$baseurl1=base_path()."forums";
-			$baseurl=base_path()."ask-a-question";
-	    	$output .= "<div class='sub-title clear'>No questions have been posted.</div><div class='col-12 content_down'><a href='".$baseurl1."'  class='btn btn-default' >Back</a> &nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
-	    	}
+				$output .= theme('table',array('header' => $header,'rows' => $row));
+				$output .= theme('pager');
+				if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || (in_array('teacher',$user->roles)))
+				{}
+				else
+				{
+					$baseurl=base_path()."ask-a-question";
+					$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
+				}
+		}
+		else
+		{
+				if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)))
+				{}
+				else
+				{
+				$baseurl1=base_path()."forums";
+				$baseurl=base_path()."ask-a-question";
+				$output .= "<div class='sub-title clear'>No questions have been posted.</div><div class='col-12 content_down'><a href='".$baseurl1."'  class='btn btn-default' >Back</a> &nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
+				}
+		}
+	   
+	      
 	   }
+		else
+		{
+			drupal_goto("forums");
+			//var_dump($grade);
+			//var_dump($subjects);
+			//die;
+		}
 	   return $output;
 	}
     function _question()
@@ -357,8 +401,15 @@
         $account = $user;
         $question_id = arg(2);
         $output = '';
-        $comment = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
-        if(($question_id)&&($comment->rowCount() > 0))
+        //$comment = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
+		$grd_subj = db_query("SELECT grade_id,subject_id FROM forum_questions WHERE id=".$question_id)->fetchObject();
+		 $grades = $grd_subj->grade_id;
+		 $subjects = $grd_subj->subject_id;
+		//var_dump($grd_subj);
+		
+		//die;
+		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$account->uid.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
+        if($question_id)
         {
             $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');		
 		    $res_attachment = db_query('SELECT id,question_id,file_name from forum_question_attach where question_id='.$question_id.'');
@@ -399,7 +450,7 @@
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
-        if($teacher_query->rowCount() > 0)
+        if(((in_array('teacher', $user->roles))&&($teacher_query->rowCount() > 0))||(in_array('administrator', $user->roles)))
         {
             $form_question = drupal_get_form("question_reply_form", $question_id);
         }
@@ -430,7 +481,7 @@
             }
 			
         }
-        if((in_array('admin moderator',$user->roles))||(in_array('moderator',$user->roles)||(in_array('administrator',$user->roles))))
+        if((in_array('admin moderator',$user->roles))||((in_array('moderator',$user->roles)&&($student_query->cnt > 0))||(in_array('administrator',$user->roles))))
         {
            $output.="<div class='col-12 content_down'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default'>Reject</a><br /><br /></div>"; 
         }
@@ -451,6 +502,9 @@
         return $output;
     }
     function question_reply_form($form, &$form_state, $question_id) {
+	global $user;
+	
+	
         $form = array();
         $form["#submit"] = array(
             'question_reply_form_submit',
@@ -473,6 +527,7 @@
             '#value' => "Send Email"
         );
         return $form;
+	
     }
     function question_reply_form_submit($form, &$form_state)
     {
@@ -492,7 +547,6 @@
         $params = array(
             'body' => $message,
             'subject' => 'Answer is waiting for your approval',
-            'headers'=>'simple',
         );
         $admin_moderator_id = role_mail('admin moderator',$stu_query->grade_id,$stu_query->subject_id);
         $moderator_id = role_mail('moderator',$stu_query->grade_id,$stu_query->subject_id);

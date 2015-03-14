@@ -41,7 +41,7 @@ function comment_waiting_for_approval()
                 }else {
                     drupal_set_message('Error !!!!.Please try again.');
                 }
-                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fqr.question_id = fq.id")->fetchObject();
+                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question, fq.user_id FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fqr.question_id = fq.id")->fetchObject();
                 $message = array('0'=>t('Dear Teacher,<br><br>Your question has been rejected by Moderator<br>
                                  Grade: '.grade($question_detail->grade_id).'<br>
                                  Topic: '.subject($question_detail->subject_id).'<br>
