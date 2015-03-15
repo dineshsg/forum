@@ -70,7 +70,7 @@
             '#type' => 'file',
             '#name' => 'files[]',
             '#title' => t('Attach Multiple Files'),
-            '#description' => t('You are allow to upload jpg, jpeg, png and gif, 10MB Max Size'),
+            '#description' => t('You are allow to upload jpg, jpeg, png and gif, 10MB Max Size.'),
             '#attributes' => array('multiple' => 'multiple','class' => array('dropdown-forum')),
             '#upload_validators' => array(
                 'file_validate_size' => array(1024 * 1024),
@@ -252,7 +252,7 @@
 	   if (($grades)||($subjects))
 	   {
 		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$usr.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
-	    if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
+	    if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)&&($student_query->cnt > 0)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
 	    {
 		   $header = array(
 							array('data' => 'Question', 'field' => 'question', 'sort' => 'desc'),
@@ -289,7 +289,7 @@
            $table_sort = $result->extend('TableSort')
                        ->orderByHeader($header);
            $pager = $table_sort->extend('PagerDefault')
-                  ->orderBy('created', 'DESC')
+                  ->orderBy('id', 'DESC')
                   ->limit(5);
            $result = $pager->execute();
 	   }
@@ -352,7 +352,7 @@
 						else
 							$link="-";
 					}
-					if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
+					if((in_array('admin moderator',$user->roles)&&($student_query->cnt > 0)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
 					{
 					$row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
 					}
@@ -363,7 +363,7 @@
 				}
 				$output .= theme('table',array('header' => $header,'rows' => $row));
 				$output .= theme('pager');
-				if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)) || (in_array('teacher',$user->roles)))
+				if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)&&($student_query->cnt > 0)) || (in_array('teacher',$user->roles)&&($student_query->cnt > 0)))
 				{}
 				else
 				{
@@ -373,7 +373,7 @@
 		}
 		else
 		{
-				if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)))
+				if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)&&($student_query->cnt > 0)))
 				{}
 				else
 				{
@@ -398,17 +398,14 @@
     {
         global $user;
         global $base_url;
-        $account = $user;
+        $account = $user->uid;
         $question_id = arg(2);
         $output = '';
         //$comment = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
 		$grd_subj = db_query("SELECT grade_id,subject_id FROM forum_questions WHERE id=".$question_id)->fetchObject();
-		 $grades = $grd_subj->grade_id;
-		 $subjects = $grd_subj->subject_id;
-		//var_dump($grd_subj);
-		
-		//die;
-		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$account->uid.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
+		$grades = $grd_subj->grade_id;
+		$subjects = $grd_subj->subject_id;
+		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$account.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
         if($question_id)
         {
             $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');		
@@ -447,7 +444,7 @@
 				            		}// '../../".$rows_attach->file_name."'
 			    $output .="</div></div>";	
             }
-        $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
+        $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id, ques.status FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
         if(((in_array('teacher', $user->roles))&&($teacher_query->rowCount() > 0))||(in_array('administrator', $user->roles)))
@@ -481,7 +478,7 @@
             }
 			
         }
-        if((in_array('admin moderator',$user->roles))||((in_array('moderator',$user->roles)&&($student_query->cnt > 0))||(in_array('administrator',$user->roles))))
+        else if(((in_array('admin moderator',$user->roles))||((in_array('moderator',$user->roles)&&($student_query->cnt > 0))||(in_array('administrator',$user->roles))))&&($row->status == '0'))
         {
            $output.="<div class='col-12 content_down'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default'>Reject</a><br /><br /></div>"; 
         }

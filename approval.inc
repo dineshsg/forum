@@ -44,7 +44,6 @@
                 $params = array(
                     'body' => $message,
                     'subject' => 'Question waiting for Reply',
-                    'headers'=> array('Content-Type' => 'text/html'),
                 );
                 $teacher_mail_id = role_mail('teacher',$stu_query->grade_id,$stu_query->subject_id);
 			    $to = $teacher_mail_id;
@@ -81,7 +80,6 @@
                 $params = array(
                     'body' => $message,
                     'subject' => 'Question has been Rejected by the Moderator',
-                    'headers'=> array('Content-Type' => 'text/html'),
                 );
                 $to = $student_user->mail;			   
                 $language = user_preferred_language($user);
