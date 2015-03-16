@@ -118,6 +118,7 @@ function comment_waiting_for_approval()
           		                    ->orderBy('id', 'DESC')
                   	                ->limit(5);
 		      }
+		      $result = $pager->execute();
                 if(!$result->rowCount())
                 {
                     $output .= "No Comment for approval!!";

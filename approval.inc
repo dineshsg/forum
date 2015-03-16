@@ -138,7 +138,7 @@
           		                    ->orderBy('id', 'DESC')
                   	                ->limit(5);
 		        }
-
+                $result = $pager->execute();
                 if(!$result->rowCount())
                 {
                     $output .= "No Questions for approval!!";

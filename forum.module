@@ -311,7 +311,6 @@
 			        '#type' => 'textfield',
 			        '#size' => 30,
 			        '#title' => t('First Name'),
-			        //'#required' => TRUE,
 			        '#default_value' => $fname,
 			        '#description' => "Please enter your First Name.",
 		        );
@@ -319,7 +318,6 @@
 			        '#type' => 'textfield',
 			        '#size' => 30,
 			        '#title' => t('Last Name'),
-			        //'#required' => TRUE,
 			        '#default_value' => $lname,
 			        '#description' => "Please enter your Last Name.",
 		        );
@@ -327,7 +325,6 @@
 			        '#type' => 'textfield',
 			        '#size' => 12,
 			        '#title' => t('Mobile No.'),
-			        //'#required' => TRUE,
 			        '#default_value' => $mobile,
 			        '#description' => "Please enter your Mobile No.",
 			        '#attributes' => array('class' => array('mobile')),
@@ -342,7 +339,6 @@
 					'#default_value' => $grade,
                     '#attributes' => array('class' => array('grade')),
                     '#validated' => TRUE,
-                    //'#required' => TRUE,
                 );
                 if(($user->uid)&&(!in_array('authentcated user', $user->roles)))
 		        {
@@ -363,9 +359,6 @@
     }
     function forum_form_validate($form,&$form_state)
     {
-	//var_dump($form_state);
-	//die;	//var_dump(($form_state['values']['name']=='')&&($form_state['values']['mail']=='')&&($form_state['values']['tfname']=='')&&($form_state['values']['tlname']=='')&&($form_state['values']['tmobile'])&&($form_state['values']['grade']=='0'));
-	//die;
 if(($form_state['values']['name']=='')&&($form_state['values']['mail']=='')&&($form_state['values']['tfname']=='')&&($form_state['values']['tlname']=='')&&($form_state['values']['tmobile']=='')&&($form_state['values']['grade']=='0'))
 			{
 				form_set_error('name','Please fill in the following details');

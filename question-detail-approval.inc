@@ -4,7 +4,7 @@
         {
         global $user;
         global $base_url;
-        $account = $user;
+        $account = $user->uid;
         $question_id = arg(2);
         $output = '';
         if($question_id)
@@ -55,7 +55,11 @@
         {
             drupal_set_message('You dont have access-rights to view this page','warning');
         }		
-        if((in_array('admin moderator',$user->roles))||(in_array('moderator',$user->roles)||(in_array('administrator',$user->roles))))
+        $grd_subj = db_query("SELECT grade_id,subject_id FROM forum_questions WHERE id=".$question_id)->fetchObject();
+		$grades = $grd_subj->grade_id;
+		$subjects = $grd_subj->subject_id;
+		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$account.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
+        if((in_array('admin moderator',$user->roles))||((in_array('moderator',$user->roles)&&($student_query->cnt > 0))||(in_array('administrator',$user->roles))))
         {
            $output.="<div class='col-12 content_down'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default'>Reject</a><br /><br /></div>";
         }
