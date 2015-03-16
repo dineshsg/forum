@@ -113,11 +113,17 @@
 			       ->condition($db_or)
 			       ->execute()
                    ->fetchAll();
-            $table_sort = $result->extend('TableSort')
-                        ->orderByHeader($header);
-            $pager = $table_sort->extend('PagerDefault')
-                   ->orderBy('created', 'DESC')
-                   ->limit(5);
+		  if(isset($_REQUEST['sort']))
+		  {
+				$table_sort = $result->extend('TableSort')							
+						  		 ->orderByHeader($header);
+			   $pager = $table_sort->extend('PagerDefault')  
+                  		->limit(5);
+		  }else{
+          		 $pager = $result->extend('PagerDefault')                  
+          		                 ->orderBy('id', 'DESC')
+                  	             ->limit(5);
+		  }
             $result = $pager->execute();
             if($result->rowCount() > 0)
 	        {

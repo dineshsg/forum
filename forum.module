@@ -206,11 +206,14 @@
             'Question Reply'=> array(
                 'title' => t('Reply To The Questions')
             ),
-            'Question Detail'=>array(
-                'title' => t('Question Detail')
+            'Question Details'=>array(
+                'title' => t('Question Details')
             ),
             'Comment Moderator Approval'=>array(
                 'title' => t('Comment Moderator Approval')
+            ),
+			'Comment Details'=>array(
+                'title' => t('Comment Details')
             ),
         );
 	}

@@ -107,12 +107,17 @@ function comment_waiting_for_approval()
                 }
                 else
                 {}
-                $table_sort = $result->extend('TableSort')
-                            ->orderByHeader($header);
-                $pager = $table_sort->extend('PagerDefault')
-                       ->orderBy('created', 'ASC')
-                       ->limit(5);
-                $result = $pager->execute();
+    		  if(isset($_REQUEST['sort']))
+    		  {
+    				$table_sort = $result->extend('TableSort')							
+        						  		 ->orderByHeader($header);
+                    $pager = $table_sort->extend('PagerDefault')  
+                  	                	->limit(5);
+		      }else{
+                    $pager = $result->extend('PagerDefault')                  
+          		                    ->orderBy('id', 'DESC')
+                  	                ->limit(5);
+		      }
                 if(!$result->rowCount())
                 {
                     $output .= "No Comment for approval!!";

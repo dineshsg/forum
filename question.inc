@@ -70,12 +70,12 @@
             '#type' => 'file',
             '#name' => 'files[]',
             '#title' => t('Attach Multiple Files'),
-            '#description' => t('You are allow to upload jpg, jpeg, png and gif, 10MB Max Size.'),
+            '#description' => t('Allowed file extension :png,jpg,jpeg,bmp,ods,txt,docx,pdf. <br> You can select multiple files for upload by holding Control key (Mac or Windows, resp.) while selecting files. '),
             '#attributes' => array('multiple' => 'multiple','class' => array('dropdown-forum')),
             '#upload_validators' => array(
                 'file_validate_size' => array(1024 * 1024),
             ),
-        );
+        ); /*10MB Max Size.*/
         $form['question_desc'] = array(
           '#title' => t('Ask your Question'),
           '#type' => 'textarea',
@@ -268,6 +268,11 @@
 							array('data' => 'File', 'field' => 'id', 'sort' => 'asc'),
 							array('data' => 'Posted By', 'field' => 'created', 'sort' => 'desc'),
 						  );
+			 /*$header = array(
+							array('data' => 'Question', 'field' => 'question'),
+							array('data' => 'File', 'field' => 'id'),
+							array('data' => 'Posted By', 'field' => 'created'),
+						  );*/
 	    }
 	   
 	   if(!($grades)||!($subjects))
@@ -308,7 +313,7 @@
            $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
 		   if((!in_array('teacher',$user->roles))&&(!in_array('admin moderator',$user->roles))&&(!in_array('moderator',$user->roles))&&(!in_array('administrator',$user->roles)))
 		   {
-				$result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
+				$result->join('forum_question_reply','fqr','fq.id = fqr.question_id');
 				$result->condition('fqr.status', 1, '=');
 		   }
            $result->fields('fs', array('subject_name'));
@@ -319,14 +324,21 @@
                   ->condition('fs.id', $subjects,'=')
                   ->execute()
                   ->fetchAll();
-           $table_sort = $result->extend('TableSort')
-                       ->orderByHeader($header);
-           $pager = $table_sort->extend('PagerDefault')
-                  ->orderBy('created', 'DESC')
-                  ->limit(5);
+				  
+		  if(isset($_REQUEST['sort']))
+		  {
+				$table_sort = $result->extend('TableSort')							
+						  		 ->orderByHeader($header);
+			   $pager = $table_sort->extend('PagerDefault')  
+                  		->limit(5);
+		  }else{
+          		 $pager = $result->extend('PagerDefault')                  
+          		                 ->orderBy('id', 'DESC')
+                  	             ->limit(5);
+		  }
            $result = $pager->execute();
-           
 	   }
+	   
 	   if($result->rowCount() > 0)
 	   {
 				while ($item = $result->fetch())
@@ -335,14 +347,17 @@
 					$query_username = $query_user->name;
 					$date_ago = ago($item->created);
 					$comment_query = db_query("SELECT count(*) as cmt_count FROM forum_question_reply WHERE question_id='".$item->id."'")->fetchObject();
-					if($comment_query->cmt_count > 0)
-					{
-						$comment_status = "<span>&#10004;</span>";
-					}
-					else
-					{
-						$comment_status = "<span><strong>pending</strong></span>";
-					}
+					//$query_user->uid
+					
+						if($comment_query->cmt_count > 0)
+						{
+							$comment_status = "<span>&#10004;</span>";
+						}
+						else
+						{
+							$comment_status = "<span><strong>pending</strong></span>";
+						}
+					
 					$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);
 					$link="-";
 					while ($row_attachment = $attacment_query->fetchObject())
@@ -352,7 +367,8 @@
 						else
 							$link="-";
 					}
-					if((in_array('admin moderator',$user->roles)&&($student_query->cnt > 0)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
+				/*	if((in_array('admin moderator',$user->roles)&&($student_query->cnt > 0)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))*/
+				    if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)&&($student_query->cnt > 0)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
 					{
 					$row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
 					}
@@ -408,9 +424,10 @@
 		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$account.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
         if($question_id)
         {
-            $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');		
-		    $res_attachment = db_query('SELECT id,question_id,file_name from forum_question_attach where question_id='.$question_id.'');
+            $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE ques.grade_id = grds.id and ques.subject_id = sub.id and ques.id = '.$question_id.'');					
+		    $res_attachment = db_query('SELECT id,question_id,file_name from forum_question_attach where question_id='.$question_id.'');			
             $question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.question_id = '.$question_id.' AND qr.status = 1');
+			
             $output .= "<div>";
   	        while($rows = $question_detail->fetchObject()){
 			    $grade_name=$rows->grade_name;
@@ -446,7 +463,7 @@
             }
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id, ques.status FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
-        $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
+        $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");		
         if(((in_array('teacher', $user->roles))&&($teacher_query->rowCount() > 0))||(in_array('administrator', $user->roles)))
         {
             $form_question = drupal_get_form("question_reply_form", $question_id);
@@ -550,7 +567,6 @@
         $to = $admin_moderator_id.','.$moderator_id;
         $language = user_preferred_language($user);
         drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
-       // drupal_goto('forums');
 	   drupal_goto('forum/questions/'.$stu_query->grade_id.'/'.$stu_query->subject_id.'/');
     }
 ?>

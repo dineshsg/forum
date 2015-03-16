@@ -47,6 +47,7 @@
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
+		
         if((!user_is_logged_in())||(in_array('authenticated user', $user->roles)))
         {
 		}
@@ -56,7 +57,7 @@
         }		
         if((in_array('admin moderator',$user->roles))||(in_array('moderator',$user->roles)||(in_array('administrator',$user->roles))))
         {
-           $output.="<div class='col-12 content_down'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default'>Reject</a><br /><br /></div>"; 
+           $output.="<div class='col-12 content_down'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default'>Reject</a><br /><br /></div>";
         }
         $output .= "</div><br></div>";
         }
