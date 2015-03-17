@@ -106,4 +106,12 @@ jQuery(document).ready(function($) {
 			
         });
     });
+    
+   
+       $('.reject').click(function(){
+          if(!confirm('Are you sure?'))
+              return false;
+      });
+   
 });
+
