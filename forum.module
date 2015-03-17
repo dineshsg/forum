@@ -271,19 +271,29 @@
 	    $user_arg = arg(1);
 	    global $user;
 	    $subject_t = array();
+		$subject_temp= array();
         $user_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user_arg."'");
+		
         if($user_query->rowCount() >0)
         {
             $query = $user_query->fetchObject();
+			
+			//--- Start - code added by Manjiri
+			$res_sql=db_query("select id,subject_name from forum_subjects where grade_id='".$query->grade."'");	
+			foreach($res_sql as $temp_sql)
+			{
+				$subject_temp[$temp_sql->id]=$temp_sql->subject_name;				
+			}
+			//--- End - code added by Manjiri
             $fname = $query->fname;
             $lname = $query->lname;
             $mobile = $query->mobile;
             $grade = $query->grade;
 			$subject = explode(',',$query->subject);
-			foreach($subject as $temp_sub)
+			/*foreach($subject as $temp_sub)
 			{
 				$subject_t[$temp_sub] = subject($temp_sub);
-			}			
+			}	*/		
         }
         else
         {
@@ -293,6 +303,7 @@
 			$grade = '';
 			$subject = '';
         }
+		
 		
           if (($form_id === 'user_profile_form' )||($form_id === 'user_register_form'))
           { 
@@ -345,15 +356,16 @@
                    	$form['subject'] = array(
 							'#title' => t('Topic'),
 							'#type' => 'select',
-							'#multiple' => TRUE,
-							'#default_value' => $subject_t,
-							'#options' => $subject_t,			
-							'#attributes' => array('class' => array('subject')),
+							'#multiple' => TRUE,													
+							'#options' => $subject_temp,	
+							'#default_value' => $subject,										
+							'#attributes' => array('class' => array('subject'),'selected'=>'selected'),
 							'#validated' => TRUE
 						);
                 }
                 array_unshift($form['#validate'], 'forum_form_validate');
                 }
+				
                 $form['#submit'][] = 'forum_form_alter_submit';
                 return $form;                
     }

@@ -17,8 +17,7 @@ function _comment()
   	        while($rows = $question_detail->fetchObject()){
 			    $grade_name=$rows->grade_name;
 			    $subject_name=$rows->subject_name;
-		        $output .= "<div class='col-12 img_bg border_blue'>
-		                        
+		        $output .= "<div class='col-12 img_bg border_blue'>		                        
 		                            <div class='space'>
   	                                    <div class='font-100 custom_font2 content_down '>
   	                                    Grade :<label class='font_black font-300'> ".$rows->grade_name." </label> &nbsp; &nbsp;              

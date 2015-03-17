@@ -71,12 +71,22 @@
 					//$output .="<a href='.$link->file_name.' > Click Here To Download</a>";
 				}
 				 // Body of your email here
+				if($output)
+				{
                 $message = array('0'=>t('Dear Student,<br><br>A question posted by you on forums has been rejected by the moderator.<br>
                                  Grade: '.grade($stu_query->grade_id).'<br>
                                  Topic: '.subject($stu_query->subject_id).'<br>
                                  Question: '.$stu_query->question.'<br>
 								 File Attachment : '.$output.'')); 
-                
+                }
+                else
+                {
+                $message = array('0'=>t('Dear Student,<br><br>A question posted by you on forums has been rejected by the moderator.<br>
+                                 Grade: '.grade($stu_query->grade_id).'<br>
+                                 Topic: '.subject($stu_query->subject_id).'<br>
+                                 Question: '.$stu_query->question.'<br>
+								 ')); 
+                }
                 $params = array(
                     'body' => $message,
                     'subject' => 'Question has been Rejected by the Moderator',
@@ -151,14 +161,14 @@
 						$post_user=$temp_user_post->name;
                         $date_ago = ago($item->created);
 						$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);
-						$link="-";
+						$link="";$cnt=0;
 						while ($row_attachment = $attacment_query->fetchObject())
 						{					
-						if($row_attachment->file_name)
-							$link="<a href='../../".$row_attachment->file_name."' target='_blank'>File</a>";
-						else
-							$link="-";
+							if($row_attachment->file_name)
+								$link=" <a href='".base_path().$row_attachment->file_name."' target='_blank'>File".++$cnt."</a>";						
 						}
+						if($link=="")
+							$link="-";
 						$row[] = array($item->grade_name,$item->subject_name,'<a href="../question-det-approval/'.$item->id.'/">'.truncate_chars($item->question,10).'</a>',$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question-det-approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1'));
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));

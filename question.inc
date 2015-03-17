@@ -3,7 +3,7 @@
 	{
 	    global $user;		
 	    $subject_t = array();
-		
+		$subject_temp = array();
 	    $student_ask_q = db_query("SELECT grade,subject FROM users_extend WHERE uid=".$user->uid)->fetchObject();
 		if(!($student_ask_q))
 		{
@@ -16,7 +16,7 @@
 				$subject_t[$temp_sub] = subject($temp_sub);
 			}
 	    }
-		$option='';
+		$option=array(''=>'-Select-');
 		if($user->uid){
 			$result_grade = db_query('SELECT id,grade_name FROM forum_grades') ->fetchAll();
 			$grd_nm = $result_grade[0]->grade_name;
@@ -32,8 +32,7 @@
 			$grade=array(''=>'');
 		 }
 		 else{
-			$grade=$result_getuserinfo[0]->grade;
-			//array_push($stack, "apple", "raspberry");
+			$grade=$result_getuserinfo[0]->grade;					
 		 }
 		 
 		 $subject_arr=explode(',',$result_getuserinfo[0]->subject);
@@ -49,19 +48,44 @@
 		 {
 			$subject=array(''=>'');
 		 }
-        $form['grade'] = array(
-            '#title' => t('Grade'),
-            '#type' => 'select',
-			'#default_value' => $grade,
-            '#options' => $option,
-            '#attributes' => array('class' => array('grade','dropdown-forum')),
-            '#validated' => TRUE,
-            '#required' => TRUE,			
-        );
+		 if(!empty($grade) || $grade!='')
+		 {
+		 	//--- Start - code added by Manjiri
+			$res_sql=db_query("select id,subject_name from forum_subjects where grade_id='".$grade."'");	
+			foreach($res_sql as $temp_sql)
+			{
+				$subject_temp[$temp_sql->id]=$temp_sql->subject_name;				
+			}
+			//--- End - code added by Manjiri
+		 }
+		 if(in_array('administrator',$user->roles)) 
+		 {
+			$form['grade'] = array(
+				'#title' => t('Grade'),
+				'#type' => 'select',
+				'#default_value' =>'',
+				'#options' => $option,
+				'#attributes' => array('class' => array('grade','dropdown-forum')),
+				'#validated' => TRUE,
+				'#required' => TRUE,			
+			);
+		}
+		else{
+			$form['grade'] = array(
+				'#title' => t('Grade'),
+				'#type' => 'select',
+				'#default_value' => $grade,
+				'#options' => $option,
+				'#attributes' => array('class' => array('grade','dropdown-forum')),
+				'#validated' => TRUE,
+				'#required' => TRUE,			
+			);
+		}
         $form['subject'] = array(
             '#title' => t('Topic'),
             '#type' => 'select',
-			'#options' => $subject,
+			'#options' => $subject_temp,
+			'#default_value' => $subject_arr,
             '#attributes' => array('class' => array('subject','dropdown-forum')),
             '#validated' => TRUE,
             '#required' => TRUE,
@@ -210,12 +234,23 @@
         while($link = $file_attachment->fetchObject())
         {
             $output .= '<a href='.$link->file_name.' download>Click Here To Download</a><br>';
-        }
+        }		
+        if($output)
+        {
         $message = array('0'=>t('Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
                                  Grade: '.grade($form_state['values']['grade']).'<br>
                                  Topic: '.subject($form_state['values']['subject']).'<br>
                                  Question: '.$form_state['values']['question_desc'].'<br>
                                  File Attachment : '.$output.'')); 
+        }
+        else
+        {
+        $message = array('0'=>t('Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
+                                 Grade: '.grade($form_state['values']['grade']).'<br>
+                                 Topic: '.subject($form_state['values']['subject']).'<br>
+                                 Question: '.$form_state['values']['question_desc'].'<br>
+                                 ')); 
+        }
         $params = array(
             'body' => $message,
             'subject' => 'New Question Posted on Forum',
@@ -346,7 +381,7 @@
 					$query_user = user_load($item->user_id);
 					$query_username = $query_user->name;
 					$date_ago = ago($item->created);
-					$comment_query = db_query("SELECT count(*) as cmt_count FROM forum_question_reply WHERE question_id='".$item->id."'")->fetchObject();
+					$comment_query = db_query("SELECT count(*) as cmt_count FROM forum_question_reply WHERE question_id='".$item->id."' AND status > -1")->fetchObject();
 					//$query_user->uid
 					
 						if($comment_query->cmt_count > 0)
@@ -355,18 +390,20 @@
 						}
 						else
 						{
-							$comment_status = "<span><strong>pending</strong></span>";
+							$comment_status = "<span><strong>Pending</strong></span>";
 						}
 					
-					$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);
-					$link="-";
+					$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);					
+					$link="";$cnt=0;
 					while ($row_attachment = $attacment_query->fetchObject())
 					{					
 						if($row_attachment->file_name)
-							$link="<a href='".base_path().$row_attachment->file_name."' target='_blank'>File</a>";
-						else
-							$link="-";
+						{
+							$link.=" <a href='".base_path().$row_attachment->file_name."' target='_blank'>File".++$cnt."</a>";
+						}						
 					}
+					if($link=="")
+						$link="-";
 				/*	if((in_array('admin moderator',$user->roles)&&($student_query->cnt > 0)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))*/
 				    if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)&&($student_query->cnt > 0)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
 					{
@@ -404,9 +441,6 @@
 		else
 		{
 			drupal_goto("forums");
-			//var_dump($grade);
-			//var_dump($subjects);
-			//die;
 		}
 	   return $output;
 	}
