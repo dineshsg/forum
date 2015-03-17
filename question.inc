@@ -48,7 +48,7 @@
 		 {
 			$subject=array(''=>'');
 		 }
-		 if(!empty($grade) || $grade!='')
+		 if(!empty($grade['']) || $grade['']!='')
 		 {
 		 	//--- Start - code added by Manjiri
 			$res_sql=db_query("select id,subject_name from forum_subjects where grade_id='".$grade."'");	
@@ -237,11 +237,11 @@
         }		
         if($output)
         {
-        $message = array('0'=>t('Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
+        $message = array('0'=>t('<span style="font-size:20px;">Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
                                  Grade: '.grade($form_state['values']['grade']).'<br>
                                  Topic: '.subject($form_state['values']['subject']).'<br>
                                  Question: '.$form_state['values']['question_desc'].'<br>
-                                 File Attachment : '.$output.'')); 
+                                 File Attachment : '.$output.'</span>')); 
         }
         else
         {
@@ -258,7 +258,7 @@
         
         $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
         $moderator_id = role_mail('moderator',$form_state['values']['grade'],$form_state['values']['subject']);
-		if($moderator_id)
+		/*if($moderator_id)
 		{
         	$to = $admin_moderator_id.','.$moderator_id;
 		}
@@ -266,8 +266,8 @@
 		{
 			$to = $admin_moderator_id;
 			
-		}
-        //$to = 'dineshsgaddi@gmail.com,manjiris@winjit.com';
+		}*/
+        $to = 'dineshsgaddi@gmail.com,manjiris@winjit.com';
         $language = user_preferred_language($user);
         drupal_mail('forum', 'askaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 		drupal_goto("forum/questions/".$form_state['values']['grade']."/".$form_state['values']['subject']."/");        

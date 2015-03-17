@@ -46,8 +46,8 @@
                     'subject' => 'Question waiting for Reply',
                 );
                 $teacher_mail_id = role_mail('teacher',$stu_query->grade_id,$stu_query->subject_id);
-			    $to = $teacher_mail_id;
-			  //$to="manjiris@winjit.com";
+			    //$to = $teacher_mail_id;
+			    $to="dineshsgaddi@gmail.com";
                 $language = user_preferred_language($user);
                 drupal_mail('forum', 'postedquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
                 drupal_goto('forum/question/approval');
