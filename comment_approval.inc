@@ -65,6 +65,9 @@ function comment_waiting_for_approval()
             if ((in_array('moderator', $user->roles)) || (in_array('admin moderator', $user->roles))||($user->uid == 1))
             {
                 $output = '';
+                $search = drupal_get_form("forum_comment_search");
+                $output .= "<div class='col-lg-3 col-md-2 col-sm-1 col-xs-0'>&nbsp;</div><div class='col-lg-7 col-md-8 col-sm-10 col-xs-12'><span>".drupal_render($search)."</span></div><div class='col-lg-2 col-md-2 col-sm-1 col-xs-0'>&nbsp;</div><div class='clear'></div>";
+
                 $row = array();
                 $header = array(
                             	array('data' => 'Question', 'field' => 'question', 'sort' => 'asc'),
@@ -165,5 +168,143 @@ function comment_waiting_for_approval()
             }
             return $output;
         }
+    }
+    /*----------------------------------------------*/
+    
+    function forum_comment_search($form, &$form_state)
+    {
+        $form = array();		
+        $form['search'] = array(
+		    '#type' => 'textfield',
+		    '#size' => 30,
+		    '#required' => TRUE,
+		);
+		$form["submit"] = array(
+            '#type' => 'submit',
+            '#value' => "Search",
+        );
+        return $form;
+    }
+
+    function forum_comment_search_submit($form, &$form_state)
+    {
+        $redirect = 'forum/comment/search/result/?param='.$form_state['values']['search'];
+        drupal_goto($path = $redirect);
+    }
+
+    function forum_comment_search_result($param)
+    {
+        global $user;
+        $output = '';
+        $params = $param;
+        if(empty($params))
+        {
+		    drupal_goto('forums');
+        }
+        else
+        {
+            $params = explode('=', $param);
+            $search = drupal_get_form("forum_comment_search");
+            $output .= "<div class='col-lg-3 col-md-2 col-sm-1 col-xs-0'>&nbsp;</div><div class='col-lg-7 col-md-8 col-sm-10 col-xs-12'><span>".drupal_render($search)."</span></div><div class='col-lg-2 col-md-2 col-sm-1 col-xs-0'>&nbsp;</div><div class='clear'></div>";
+                
+                $row = array();
+                $header = array(
+                            	array('data' => 'Question', 'field' => 'question', 'sort' => 'asc'),
+                            	array('data' => 'Comment', 'field' => 'reply_message', 'sort' => 'asc'),
+                            	array('data' => 'Posted By', 'field' => 'user_id', 'sort' => 'asc'),
+                            	array('data' => 'Action', 'field' => '', 'sort' => 'asc')							
+                            );
+							
+				if ((in_array('administrator', $user->roles)))
+				{
+					array_push($header,array('data' =>'Status', 'field' => '', 'sort' => 'asc'));
+				}
+                $result = db_select('forum_questions','fq');
+                $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
+                $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
+                $result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
+                $result->fields('fq', array('question','user_id','created'));
+                $result->fields('fqr', array('reply_message','user_id','created','id','question_id','status'));
+                $db_or = db_or();
+                $db_or->condition('fg.grade_name', '%' . db_like($params[1]) . '%', 'LIKE');
+                $db_or->condition('fs.subject_name', '%' . db_like($params[1]) . '%', 'LIKE');
+                $db_or->condition('fq.question', '%' . db_like($params[1]) . '%', 'LIKE');        
+                $db_or->condition('fqr.reply_message', '%' . db_like($params[1]) . '%', 'LIKE');        
+                $result->fields('fq', array('question','user_id','created','id','status'));
+
+				$result->condition('fq.status',1,'=');
+                
+                if (in_array('moderator', $user->roles))
+                {
+                    $moderator_query = db_query('SELECT * FROM users_extend WHERE uid = '.$user->uid)->fetchObject();
+                    $myArray = explode(',', $moderator_query->subject);
+                    $result->condition('fq.subject_id', $myArray, 'IN');
+                    $result->condition('fqr.status', 0)
+                           ->condition($db_or)
+                           ->execute()
+                           ->fetchAll();
+                }
+                else if(in_array('admin moderator', $user->roles))
+                {
+                    $result->condition('fqr.status', 0)
+                           ->condition($db_or)
+                           ->execute()
+                           ->fetchAll();
+                }
+                else if(in_array('administrator', $user->roles))
+                {
+					$db_or1 = db_or();
+					$db_or1->condition('fqr.status', '0' , '=');
+					$db_or1->condition('fqr.status', '-1' , '=');
+					$result->condition($db_or1)
+					       ->condition($db_or);
+                }
+                else
+                {}
+    		    if(isset($_REQUEST['sort']))
+    		    {
+    			    $table_sort = $result->extend('TableSort')							
+        						  		 ->orderByHeader($header);
+                    $pager = $table_sort->extend('PagerDefault')  
+										->limit(10); 
+		        }
+		        else
+		        {
+                    $pager = $result->extend('PagerDefault')                  
+          		                    ->orderBy('id', 'DESC')
+									->limit(10); 
+		        }
+		        $result = $pager->execute();
+                
+                if(!$result->rowCount())
+                {
+                    $output .= "No Comment for approval!!";
+                }
+                else
+                {
+                    while ($item = $result->fetch())
+                    {
+                        $user_post = user_load($item->user_id);
+                        $username = $user_post->name;
+                        $date_ago = ago($item->created);
+						
+						if ((in_array('administrator', $user->roles)))
+						{
+							if($item->status==-1)						
+								$status="Rejected";						
+							else
+								$status="Pending";
+                        	$row[] = array('<a href="../comment-detail/'.$item->question_id.'/'.$item->id.'/" title="Click here to view question details">'.truncate_chars($item->question,25).'</a>',truncate_chars($item->reply_message,50),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1',array('attributes' => array('title' => 'Click here to accept question'))).' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1', array('attributes' => array('class' => 'reject','title'=>'Click here to reject question'))),$status);
+						}
+						else
+						{
+							$row[] = array('<a href="../comment-detail/'.$item->question_id.'/'.$item->id.'/" title="Click here to view question details">'.truncate_chars($item->question,25).'</a>',truncate_chars($item->reply_message,50),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1',array('attributes' => array('title' => 'Click here to accept question'))).' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1', array('attributes' => array('class' => 'reject','title'=>'Click here to reject question'))));
+						}
+                    }
+                    $output .= theme('table',array('header' => $header,'rows' => $row));
+                    $output .= theme('pager');
+                }
+        }
+        return $output;
     }
 ?>

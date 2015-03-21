@@ -92,7 +92,7 @@
 .space{
     padding-left:9%;
 }
-#forum-search .form-item-search, #forum-question-search .form-item-search{
+#forum-search .form-item-search, #forum-question-search .form-item-search, #forum-comment-search .form-item-search{
 	text-align:center;
 	padding: 0px;
 	float:left;
@@ -112,7 +112,7 @@
 	z-index: 101;
 	width:440px;
 }
-#forum-search #edit-submit, #forum-question-search #edit-submit{
+#forum-search #edit-submit, #forum-question-search #edit-submit, #forum-comment-search #edit-submit{
 padding: 16px 0.9em 15px;
 border-radius: 0px 5px 5px 0;px;
 }

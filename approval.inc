@@ -247,9 +247,9 @@ function forum_question_search_result($param)
         global $user;
         $output = '';
         $params = $param;
-        if($params=='NULL')
+        if(empty($params))
         {
-		    drupal_goto('forum');
+		    drupal_goto('forums');
         }
         else
         {
@@ -364,7 +364,7 @@ function forum_question_search_result($param)
                 $output .= theme('pager');
             }
         return $output;
-    }
+        }
     
     }
 ?>
