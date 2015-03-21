@@ -79,12 +79,13 @@
     function grade_modify_form_submit($form, &$form_state)
     {
         global $user;
-        $cur_time = $mydate = date('Y-m-d', strtotime(date('d/m/Y')));
+        //$cur_time = $mydate = date('Y-m-d', strtotime(date('d/m/Y')));
+		$cur_time = $mydate = date('Y-m-d H:i:s');
         $query = "UPDATE `forum_grades` SET `grade_name`='".$_POST['grades_name_update']."', `user_id` = '".$user->uid."', `updated_date` = '".$cur_time."' WHERE id = '".arg(3)."'";
         if(db_query($query)){
-            drupal_set_message('New Grade Category Added Successfully');
+            drupal_set_message('Grade Category Updated Successfully');
 	    }else {
-	        drupal_set_message('Error while Adding Grade Category, Please try again.');
+	        drupal_set_message('Error while Updating Grade Category, Please try again.');
 	    }
 	    $form_state['redirect'] = 'admin/list_grades';  
     }

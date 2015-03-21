@@ -16,7 +16,7 @@
                 ------------------------------------------------*/
                 $query_app = "UPDATE `forum_questions` SET `status`='".$q_status."', `updated` = CURRENT_TIMESTAMP WHERE id = '".$q_id."'";            
                 if(db_query($query_app)){
-                    drupal_set_message('Question has Approved');
+                    drupal_set_message('The question has been approved');
                 }else {
                     drupal_set_message('Error !!!!.Please try again.','error');
                 }
@@ -33,21 +33,24 @@
 				$output = '';
 				while($link = $file_attachment->fetchObject())
 				{
-					$output .= l('Click Here To Download', $link->file_name, array('absolute' => TRUE));
+					$output .="<br>". l('Click Here To Download', $link->file_name, array('absolute' => TRUE));
 				}
-								$message = array('0'=>t('Dear Teacher,<br><br>A question has been posted on forums and is waiting for your reply<br>
+				if($output =='')
+					$output='NA';				
+				
+								$message = array('0'=>t('<span class="content-font">Dear Teacher,<br><br>A question has been posted on forums and is waiting for your reply<br>
                                          Grade: '.grade($stu_query->grade_id).'<br>
                                          Topic: '.subject($stu_query->subject_id).'<br>
                                          Question: '.$stu_query->question.'<br> 
-										 File Attachment : '.$output.'')); //// Body of your email here.
+										 File Attachment : '.$output.'</span>')); //// Body of your email here.
 
                 $params = array(
                     'body' => $message,
                     'subject' => 'Question waiting for Reply',
                 );
                 $teacher_mail_id = role_mail('teacher',$stu_query->grade_id,$stu_query->subject_id);
-			    //$to = $teacher_mail_id;
-			    $to="dineshsgaddi@gmail.com";
+			    $to = $teacher_mail_id;
+			   // $to="dineshsgaddi@gmail.com";
                 $language = user_preferred_language($user);
                 drupal_mail('forum', 'postedquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
                 drupal_goto('forum/question/approval');
@@ -67,24 +70,24 @@
 				$output = '';
 				while($link = $file_attachment->fetchObject())
 				{
-					$output .= l('Click Here To Download', $link->file_name, array('absolute' => TRUE));
+					$output .="<br>". l('Click Here To Download', $link->file_name, array('absolute' => TRUE));
 					//$output .="<a href='.$link->file_name.' > Click Here To Download</a>";
 				}
 				 // Body of your email here
 				if($output)
 				{
-                $message = array('0'=>t('Dear Student,<br><br>A question posted by you on forums has been rejected by the moderator.<br>
+                $message = array('0'=>t('<span class="content-font">Dear Student,<br><br>A question posted by you on forums has been rejected by the moderator.<br>
                                  Grade: '.grade($stu_query->grade_id).'<br>
                                  Topic: '.subject($stu_query->subject_id).'<br>
                                  Question: '.$stu_query->question.'<br>
-								 File Attachment : '.$output.'')); 
+								 File Attachment : '.$output.'</span>')); 
                 }
                 else
                 {
-                $message = array('0'=>t('Dear Student,<br><br>A question posted by you on forums has been rejected by the moderator.<br>
+                $message = array('0'=>t('<span class="content-font">Dear Student,<br><br>A question posted by you on forums has been rejected by the moderator.<br>
                                  Grade: '.grade($stu_query->grade_id).'<br>
                                  Topic: '.subject($stu_query->subject_id).'<br>
-                                 Question: '.$stu_query->question.'<br>
+                                 Question: '.$stu_query->question.'<br></span>
 								 ')); 
                 }
                 $params = array(
@@ -110,15 +113,29 @@
                             array('data' => 'Question', 'field' => 'question', 'sort' => 'asc'),
 							array('data' => 'File', 'field' => 'id', 'sort' => 'asc'),
                             array('data' => 'Posted By', 'field' => 'user_id', 'sort' => 'asc'),
-                            array('data' =>'Action', 'field' => '', 'sort' => 'asc')
+                            array('data' =>'Action', 'field' => '', 'sort' => 'asc'),							
                             );
+				if ((in_array('administrator', $user->roles)))
+				{
+					array_push($header,array('data' =>'Status', 'field' => '', 'sort' => 'asc'));
+				}
                 $result = db_select('forum_questions','fq');
                 $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
                 $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
                 $result->fields('fs', array('subject_name'));
                 $result->fields('fg', array('grade_name'));
-                $result->fields('fq', array('question','user_id','created','id'));
-				$result->condition('fq.status',0,'=');
+                $result->fields('fq', array('question','user_id','created','id','status'));
+				 if ((in_array('administrator', $user->roles)))
+				 {
+				 	$db_or = db_or();
+					$db_or->condition('fq.status', '0' , '=');
+					$db_or->condition('fq.status', '-1' , '=');
+					$result->condition($db_or);
+					
+				 }
+				 else
+				  	$result->condition('fq.status',0,'=');
+				 
                 if (in_array('moderator', $user->roles))
                 {
                     $moderator_query = db_query('SELECT * FROM users_extend WHERE uid = '.$user->uid)->fetchObject();
@@ -141,12 +158,16 @@
 		        {
 				    $table_sort = $result->extend('TableSort')							
 					                     ->orderByHeader($header);
-			        $pager = $table_sort->extend('PagerDefault')  
-                  		                ->limit(5);
+			        $pager = $table_sort->extend('PagerDefault') 
+										->orderBy('status', 'DESC') 
+										->limit(10); 
+                  		               /* ->limit(5);*/
                 }else{
           		    $pager = $result->extend('PagerDefault')                  
           		                    ->orderBy('id', 'DESC')
-                  	                ->limit(5);
+									->orderBy('status', 'DESC')
+									->limit(10); 
+                  	               /* ->limit(5);*/
 		        }
                 $result = $pager->execute();
                 if(!$result->rowCount())
@@ -165,11 +186,23 @@
 						while ($row_attachment = $attacment_query->fetchObject())
 						{					
 							if($row_attachment->file_name)
-								$link=" <a href='".base_path().$row_attachment->file_name."' target='_blank'>File".++$cnt."</a>";						
+								$link.=" <a href='".base_path().$row_attachment->file_name."' target='_blank'>File".++$cnt."</a>";						
 						}
 						if($link=="")
 							$link="-";
-						$row[] = array($item->grade_name,$item->subject_name,'<a href="../question-det-approval/'.$item->id.'/">'.truncate_chars($item->question,10).'</a>',$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question-det-approval/'.$item->id.'/1').' | '.l('Reject','forum/question/approval/'.$item->id.'/-1',array('attributes' => array('class' => 'reject'))));
+						
+						
+						if ((in_array('administrator', $user->roles)))
+						{
+							if($item->status==-1)						
+								$status="Rejected";						
+							else
+								$status="Pending";
+							$row[] = array($item->grade_name,$item->subject_name,'<a href="../question-det-approval/'.$item->id.'/" title="Click here to view question details">'.truncate_chars($item->question,50).'</a>',$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question-det-approval/'.$item->id.'/1',array('attributes' => array('title' => 'Click here to accept question'))).' | '.l('Reject','forum/question/approval/'.$item->id.'/-1',array('attributes' => array('class' => 'reject','title' => 'Click here to reject question'))),$status);		
+						}
+						else{
+							$row[] = array($item->grade_name,$item->subject_name,'<a href="../question-det-approval/'.$item->id.'/" title="Click here to view question details">'.truncate_chars($item->question,50).'</a>',$link, $post_user.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/question-det-approval/'.$item->id.'/1',array('attributes' => array('title' => 'Click here to accept question'))).' | '.l('Reject','forum/question/approval/'.$item->id.'/-1',array('attributes' => array('class' => 'reject','title' => 'Click here to reject question'))));
+						}
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
                     $output .= theme('pager');
@@ -184,5 +217,5 @@
             return $output;
         }
     }
-    
+
 ?>

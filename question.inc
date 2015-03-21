@@ -222,7 +222,7 @@
         $forum_question_query = "INSERT INTO `forum_questions` (`question`, `user_id` ,`grade_id`, `subject_id`, `status`,`created`) VALUES ('".$pre_text2."', '".$user->uid."', '".$form_state['values']['grade']."', '".$form_state['values']['subject']."','0',CURRENT_TIMESTAMP)";
 	    if(db_query($forum_question_query))
 	    {			
-		    drupal_set_message('New Question has been posted Successfully');
+		    drupal_set_message('New question has been posted successfully. <br> Your question will be appear on forum only after replied by teacher.');
 		}
 		else
 		{
@@ -237,7 +237,7 @@
         }		
         if($output)
         {
-        $message = array('0'=>t('<span style="font-size:20px;">Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
+        	$message = array('0'=>t('<span class="content-font">Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
                                  Grade: '.grade($form_state['values']['grade']).'<br>
                                  Topic: '.subject($form_state['values']['subject']).'<br>
                                  Question: '.$form_state['values']['question_desc'].'<br>
@@ -245,11 +245,11 @@
         }
         else
         {
-        $message = array('0'=>t('Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
+        $message = array('0'=>t('<span class="content-font">Dear Moderator,<br><br>A question has been posted on forums and is waiting for the approval<br>
                                  Grade: '.grade($form_state['values']['grade']).'<br>
                                  Topic: '.subject($form_state['values']['subject']).'<br>
                                  Question: '.$form_state['values']['question_desc'].'<br>
-                                 ')); 
+                                 </span>')); 
         }
         $params = array(
             'body' => $message,
@@ -258,7 +258,7 @@
         
         $admin_moderator_id = role_mail('admin moderator',$form_state['values']['grade'],$form_state['values']['subject']);
         $moderator_id = role_mail('moderator',$form_state['values']['grade'],$form_state['values']['subject']);
-		/*if($moderator_id)
+		if($moderator_id)
 		{
         	$to = $admin_moderator_id.','.$moderator_id;
 		}
@@ -266,8 +266,9 @@
 		{
 			$to = $admin_moderator_id;
 			
-		}*/
-        $to = 'dineshsgaddi@gmail.com,manjiris@winjit.com';
+		}
+		//$to = 'manjiris@winjit.com';
+      //  $to = 'dineshsgaddi@gmail.com,manjiris@winjit.com';
         $language = user_preferred_language($user);
         drupal_mail('forum', 'askaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 		drupal_goto("forum/questions/".$form_state['values']['grade']."/".$form_state['values']['subject']."/");        
@@ -330,16 +331,16 @@
                        ->orderByHeader($header);
            $pager = $table_sort->extend('PagerDefault')
                   ->orderBy('id', 'DESC')
-                  ->limit(5);
+				   ->limit(10);
+                 /* ->limit(5);*/
            $result = $pager->execute();
 	   }
 	   else
-	   {
-	       
+	   {	       
 	       $res_grades = db_query('SELECT grade_name FROM forum_grades WHERE id ='.$grades)->fetchObject();
 		   $res_topics = db_query('SELECT subject_name FROM forum_subjects WHERE id ='.$subjects)->fetchObject();
 		   $output .= "<div class='font-100 custom_font content_down sub-title'>
-  	                    Grade :<label class='font_black font-100'> ".$res_grades->grade_name." </label> &nbsp; &nbsp;
+  	                    Grade :<label class='font_black font-100'> ".$res_grades->grade_name." </label> &nbsp;&nbsp;
   	                    Topic :<label class='font_black font-100'> ".$res_topics->subject_name." </label> 
   	                  </div>";	     
 	       $result = db_select('forum_questions','fq');
@@ -365,11 +366,13 @@
 				$table_sort = $result->extend('TableSort')							
 						  		 ->orderByHeader($header);
 			   $pager = $table_sort->extend('PagerDefault')  
-                  		->limit(5);
+			   					 ->limit(10);
+                  		/*->limit(5);*/
 		  }else{
           		 $pager = $result->extend('PagerDefault')                  
           		                 ->orderBy('id', 'DESC')
-                  	             ->limit(5);
+								 ->limit(10);
+                  	            /* ->limit(5);*/
 		  }
            $result = $pager->execute();
 	   }
@@ -381,18 +384,24 @@
 					$query_user = user_load($item->user_id);
 					$query_username = $query_user->name;
 					$date_ago = ago($item->created);
-					$comment_query = db_query("SELECT count(*) as cmt_count FROM forum_question_reply WHERE question_id='".$item->id."' AND status > -1")->fetchObject();
-					//$query_user->uid
-					
-						if($comment_query->cmt_count > 0)
+					$no_of_comments = db_query("SELECT MAX(id) as cmt_id FROM forum_question_reply WHERE question_id='".$item->id."'")->fetchObject();	
+					$comment_query = db_query("SELECT COUNT(*) as cmt_count,status FROM forum_question_reply WHERE id='".$no_of_comments->cmt_id."'")->fetchObject();				
+					if($comment_query->cmt_count < 1)
 						{
-							$comment_status = "<span>&#10004;</span>";
+							$comment_status = "<span>Waiting For Reply</span>"; //&#10004;
 						}
 						else
 						{
-							$comment_status = "<span><strong>Pending</strong></span>";
+							$comment_status = comment_status($comment_query->status);
 						}
-					
+						/*if($comment_query->cmt_count > 0)
+						{
+							$comment_status = "<span>&#10003;</span>"; //&#10004;
+						}
+						else
+						{
+							$comment_status = "<span>Pending</span>";
+						}*/
 					$attacment_query = db_query('SELECT question_id, file_name FROM forum_question_attach WHERE question_id = '.$item->id);					
 					$link="";$cnt=0;
 					while ($row_attachment = $attacment_query->fetchObject())
@@ -407,11 +416,11 @@
 				/*	if((in_array('admin moderator',$user->roles)&&($student_query->cnt > 0)) || (in_array('moderator',$user->roles)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))*/
 				    if((in_array('admin moderator',$user->roles)) || (in_array('moderator',$user->roles)&&($student_query->cnt > 0)) || ((in_array('teacher',$user->roles))&&($student_query->cnt > 0)) || (in_array('administrator',$user->roles)))
 					{
-					$row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
+						$row[] = array(l(truncate_chars($item->question,50),'forum/question-detail/'.$item->id.'',array('attributes' => array('title' => 'Click here to view question details'))),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>',$comment_status);
 					}
 					else
 					{
-					$row[] = array(l(truncate_chars($item->question,30),'forum/question-detail/'.$item->id.''),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
+						$row[] = array(l(truncate_chars($item->question,50),'forum/question-detail/'.$item->id.'', array('attributes' => array('title' => 'Click here to view question details'))),$link,$query_username.'<div class="algn-right small-font">'.$date_ago.'</div>');
 					}
 				}
 				$output .= theme('table',array('header' => $header,'rows' => $row));
@@ -421,7 +430,7 @@
 				else
 				{
 					$baseurl=base_path()."ask-a-question";
-					$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
+					$output .= "<div class='content_down clear empty_content'><a href='".$baseurl."' class='btn btn-default' title='Click here to post your question'>Ask a question</a></div>";
 				}
 		}
 		else
@@ -430,12 +439,11 @@
 				{}
 				else
 				{
-				$baseurl1=base_path()."forums";
-				$baseurl=base_path()."ask-a-question";
-				$output .= "<div class='sub-title clear'>No questions have been posted.</div><div class='col-12 content_down'><a href='".$baseurl1."'  class='btn btn-default' >Back</a> &nbsp;<a href='".$baseurl."' class='btn btn-default' >Ask a question</a></div>";
+					$baseurl1=base_path()."forums";
+					$baseurl=base_path()."ask-a-question";
+					$output .= "<div class='sub-title clear'>No questions have been posted.</div><div class='col-12 content_down'><a href='".$baseurl1."'  class='btn btn-default' >Back</a> &nbsp;<a href='".$baseurl."' class='btn btn-default'  title='Click here to post your question'>Ask a question</a></div>";
 				}
-		}
-	   
+		}   
 	      
 	   }
 		else
@@ -500,7 +508,12 @@
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");		
         if(((in_array('teacher', $user->roles))&&($teacher_query->rowCount() > 0))||(in_array('administrator', $user->roles)))
         {
-            $form_question = drupal_get_form("question_reply_form", $question_id);
+			$status_query = db_query("SELECT * FROM forum_question_reply WHERE question_id = '".$question_id."' AND (status = 0 OR status=1)");
+			if($status_query->rowCount()==0 )
+			{
+				$output.="<div class='space content-font'>Answer<span class='font-red'>*</span></div>";
+            	$form_question = drupal_get_form("question_reply_form",$question_id);
+			}
         }
         else if((!user_is_logged_in())||(in_array('authenticated user', $user->roles)))
         {
@@ -537,10 +550,10 @@
         {
                 $output .= "<div class='space'>";
                 $output .= drupal_render($form_question);
-		        $prev_url=base_path()."forum/questions/".$row->grade_id."/".$row->subject_id;
-		        $output .= "<a href='".$prev_url."'  class='btn btn-default content_down' > Go to ".$grade_name." &amp; ".$subject_name."</a><br><br>";
                 $output .= "</div>";
         }
+		 $prev_url=base_path()."forum/questions/".$row->grade_id."/".$row->subject_id;
+		 $output .= "<div class='space'><a href='".$prev_url."'  class='btn btn-default content_down' > Go to ".$grade_name." &amp; ".$subject_name."</a></div><br><br>";
         $output .= "</div><br></div>";
         }
         else
@@ -552,18 +565,17 @@
     function question_reply_form($form, &$form_state, $question_id) {
 	global $user;
 	
-	
         $form = array();
         $form["#submit"] = array(
             'question_reply_form_submit',
         );
         $form["content"] = array(
-            '#type' => 'textarea',
+            '#type' => 'textarea',			
             '#wysiwyg' => True,
             '#resizable' => FALSE,
             '#required' => TRUE,
             '#attributes' => array(
-                    'class' => array('question-reply')
+                    'class' => array('question-reply','content-font'),
             ),
         );
         $form["hidden"] = array(
@@ -572,7 +584,10 @@
         );
         $form["submit"] = array(
             '#type' => 'submit',
-            '#value' => "Send Email"
+            '#value' => "Send reply by email",
+			'#attributes' => array(
+                    			'title' => array('Click here to post your reply')
+							),
         );
         return $form;
 	
@@ -580,25 +595,26 @@
     function question_reply_form_submit($form, &$form_state)
     {
         global $user;
-        $query = "INSERT INTO `forum_question_reply` (`question_id`, `user_id` ,`reply_message`, `status`,`created`) VALUES ('".$form_state["values"]["hidden"]."', '".$user->uid."',  '".$form_state["values"]["content"]."', 0,CURRENT_TIMESTAMP)";        
+        $query = "INSERT INTO `forum_question_reply` (`question_id`, `user_id` ,`reply_message`, `status`,`created`) VALUES ('".$form_state["values"]["hidden"]."', '".$user->uid."', '".$form_state["values"]["content"]."', 0,CURRENT_TIMESTAMP)";        
         if(db_query($query)){
-			drupal_set_message('Your reply has been sent successfully, waiting for Moderators Approval');
+			drupal_set_message('Your reply has been posted to Moderator for approval');
 		}else {
 			drupal_set_message('Error while posting a commment , Please try again.');
 		}
 		$stu_query = db_query("SELECT user_id,grade_id,subject_id,question FROM forum_questions WHERE id = ".$form_state["values"]["hidden"])->fetchObject();
-		$message = array('0'=>t('Dear Moderator,<br><br>Answer has been given for question and is waiting for your approval<br>
+		$message = array('0'=>t('<span class="content-font">Dear Moderator,<br><br>Answer has been given for question and is waiting for your approval<br>
                                          Grade: '.grade($stu_query->grade_id).'<br>
                                          Topic: '.subject($stu_query->subject_id).'<br>
                                          Question: '.$stu_query->question.' <br>
-										 Answer: '.$form_state['values']['content'].''));
+										 Answer: '.$form_state['values']['content'].'</span>'));
         $params = array(
             'body' => $message,
             'subject' => 'Answer is waiting for your approval',
         );
         $admin_moderator_id = role_mail('admin moderator',$stu_query->grade_id,$stu_query->subject_id);
         $moderator_id = role_mail('moderator',$stu_query->grade_id,$stu_query->subject_id);
-        $to = $admin_moderator_id.','.$moderator_id;
+        //$to = $admin_moderator_id.','.$moderator_id;
+        $to='dineshsgaddi@gmail.com';
         $language = user_preferred_language($user);
         drupal_mail('forum', 'replyaquestion', $to, $language, $params, 'demo@demo.com', $send = TRUE);
 	   drupal_goto('forum/questions/'.$stu_query->grade_id.'/'.$stu_query->subject_id.'/');

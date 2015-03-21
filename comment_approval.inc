@@ -11,16 +11,16 @@ function comment_waiting_for_approval()
             {
                 $query_app = "UPDATE `forum_question_reply` SET `status`='".$c_status."', `updated` = CURRENT_TIMESTAMP WHERE id = '".$c_id."'";            
                 if(db_query($query_app)){
-                    drupal_set_message('New Comment has been posted on Forum');
+                    drupal_set_message('New comment has been approved and posted on forum');
                 }else {
                     drupal_set_message('Error !!!!.Please try again.','error');
                 }
-                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fq.id = fqr.question_id")->fetchObject();
-                $message = array('0'=>t('Dear User,<br><br>Your question has been replied on forum<br>
+                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question, fqr.reply_message FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fq.id = fqr.question_id")->fetchObject();
+                $message = array('0'=>t('<span class="content-font">Dear User,<br><br>Your question has been replied on forum<br>
                                  Grade: '.grade($question_detail->grade_id).'<br>
                                  Topic: '.subject($question_detail->subject_id).'<br>
                                  Question: '.$question_detail->question.'<br>
-                                 ')); 
+                                 Answer: '.$question_detail->reply_message.'</span>')); 
                 $params = array(
                     'body' => $message,
                     'subject' => 'Your Question Posted on Forum has been replied',
@@ -41,12 +41,12 @@ function comment_waiting_for_approval()
                 }else {
                     drupal_set_message('Error !!!!.Please try again.');
                 }
-                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question, fq.user_id FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fqr.question_id = fq.id")->fetchObject();
-                $message = array('0'=>t('Dear Teacher,<br><br>Your question has been rejected by Moderator<br>
+                $question_detail = db_query("SELECT fq.grade_id, fq.subject_id, fq.question, fq.user_id, fqr.reply_message FROM forum_questions fq, forum_question_reply fqr WHERE fqr.id=".$c_id." AND fqr.question_id = fq.id")->fetchObject();
+                $message = array('0'=>t('<span class="content-font">Dear Teacher,<br><br>Your question has been rejected by Moderator<br>
                                  Grade: '.grade($question_detail->grade_id).'<br>
                                  Topic: '.subject($question_detail->subject_id).'<br>
                                  Question: '.$question_detail->question.'<br>
-                                 ')); 
+                                 Answer: '.$question_detail->reply_message.'</span>')); 
                 $params = array(
                     'body' => $message,
                     'subject' => 'Your Question Posted on Forum has been replied',
@@ -67,17 +67,22 @@ function comment_waiting_for_approval()
                 $output = '';
                 $row = array();
                 $header = array(
-                            array('data' => 'Question', 'field' => 'question', 'sort' => 'asc'),
-                            array('data' => 'Comment', 'field' => 'reply_message', 'sort' => 'asc'),
-                            array('data' => 'Posted By', 'field' => 'user_id', 'sort' => 'asc'),
-                            array('data' =>'Action', 'field' => '', 'sort' => 'asc')
+                            	array('data' => 'Question', 'field' => 'question', 'sort' => 'asc'),
+                            	array('data' => 'Comment', 'field' => 'reply_message', 'sort' => 'asc'),
+                            	array('data' => 'Posted By', 'field' => 'user_id', 'sort' => 'asc'),
+                            	array('data' => 'Action', 'field' => '', 'sort' => 'asc')							
                             );
+							
+				if ((in_array('administrator', $user->roles)))
+				{
+					array_push($header,array('data' =>'Status', 'field' => '', 'sort' => 'asc'));
+				}
                 $result = db_select('forum_questions','fq');
                 $result->join('forum_grades','fg', 'fq.grade_id = fg.id');
                 $result->join('forum_subjects','fs', 'fq.subject_id = fs.id');
                 $result->join('forum_question_reply','fqr', 'fq.id = fqr.question_id');
                 $result->fields('fq', array('question','user_id','created'));
-                $result->fields('fqr', array('reply_message','user_id','created','id','question_id'));
+                $result->fields('fqr', array('reply_message','user_id','created','id','question_id','status'));
 				$result->condition('fq.status',1,'=');
                 /*$result = db_select('forum_questions','fq');
                 $result->join('forum_question_reply','fqr', 'fqr.question_id = fq.id');
@@ -101,9 +106,13 @@ function comment_waiting_for_approval()
                 }
                 else if(in_array('administrator', $user->roles))
                 {
-                    $result->condition('fqr.status', 0)
+                   /* $result->condition('fqr.status', 0)
                            ->execute()
-                           ->fetchAll();
+                           ->fetchAll();*/
+					$db_or = db_or();
+					$db_or->condition('fqr.status', '0' , '=');
+					$db_or->condition('fqr.status', '-1' , '=');
+					$result->condition($db_or);
                 }
                 else
                 {}
@@ -112,11 +121,13 @@ function comment_waiting_for_approval()
     				$table_sort = $result->extend('TableSort')							
         						  		 ->orderByHeader($header);
                     $pager = $table_sort->extend('PagerDefault')  
-                  	                	->limit(5);
+										->limit(10); 
+                  	                	/*->limit(5);*/
 		      }else{
                     $pager = $result->extend('PagerDefault')                  
           		                    ->orderBy('id', 'DESC')
-                  	                ->limit(5);
+									->limit(10); 
+                  	               /* ->limit(5);*/
 		      }
 		      $result = $pager->execute();
                 if(!$result->rowCount())
@@ -130,7 +141,18 @@ function comment_waiting_for_approval()
                         $user_post = user_load($item->user_id);
                         $username = $user_post->name;
                         $date_ago = ago($item->created);
-                        $row[] = array('<a href="../comment-detail/'.$item->question_id.'/'.$item->id.'/">'.truncate_chars($item->question,25).'</a>',truncate_chars($item->reply_message,25),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1').' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1', array('attributes' => array('class' => 'reject'))));
+						
+						if ((in_array('administrator', $user->roles)))
+						{
+							if($item->status==-1)						
+								$status="Rejected";						
+							else
+								$status="Pending";
+                        	$row[] = array('<a href="../comment-detail/'.$item->question_id.'/'.$item->id.'/" title="Click here to view question details">'.truncate_chars($item->question,25).'</a>',truncate_chars($item->reply_message,50),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1',array('attributes' => array('title' => 'Click here to accept question'))).' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1', array('attributes' => array('class' => 'reject','title'=>'Click here to reject question'))),$status);
+						}
+						else{
+							$row[] = array('<a href="../comment-detail/'.$item->question_id.'/'.$item->id.'/" title="Click here to view question details">'.truncate_chars($item->question,25).'</a>',truncate_chars($item->reply_message,50),$username.'<div class="algn-right small-font">'.$date_ago.'</div>',l('Accept','forum/comment/approval/'.$item->id.'/1',array('attributes' => array('title' => 'Click here to accept question'))).' | '.l('Reject','forum/comment/approval/'.$item->id.'/-1', array('attributes' => array('class' => 'reject','title'=>'Click here to reject question'))));
+						}
                     }
                     $output .= theme('table',array('header' => $header,'rows' => $row));
                     $output .= theme('pager');

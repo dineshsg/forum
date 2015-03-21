@@ -1,5 +1,5 @@
 <?php
-    function forum_search($form, &$form_state)
+    function forum__questiona_search($form, &$form_state)
     {
         $form = array();
         $form['tfname'] = array(

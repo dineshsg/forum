@@ -86,7 +86,7 @@ jQuery(document).ready(function($) {
 							imgname='VisualArts.png';
 								
                     var hlink="location.href='forum/questions/"+grd+"/"+obj.id+"/'";
-				    html_data += "<div id='div"+obj.id+"' target='targetDiv'  class='col-lg-3 col-md-3 col-sm-6 col-xs-12'  ><p id='"+ obj.id +"' style='height:110px !important;background-image:url(./images/topics/"+imgname+");background-repeat:no-repeat;	background-position:center;text-align:center;cursor:pointer;' class='content-font topics-forum' onclick="+hlink+" ><a href='forum/questions/"+grd+"/"+obj.id+"/' class='font_black ' >" + obj.subject_name + "</a></p></div>";	
+				    html_data += "<div id='div"+obj.id+"' target='targetDiv'  class='col-lg-3 col-md-3 col-sm-6 col-xs-12'  ><p id='"+ obj.id +"' style='border:1px solid #999;height:110px !important;background-image:url(./images/topics/"+imgname+");background-repeat:no-repeat;	background-position:center;text-align:center;cursor:pointer;' class='content-font topics-forum' onclick="+hlink+" ><a href='forum/questions/"+grd+"/"+obj.id+"/' class='font_black ' >" + obj.subject_name + "</a></p></div>";	
 					
 			      });
                   $('.container_subjects').html(html_data);
@@ -109,7 +109,7 @@ jQuery(document).ready(function($) {
     
    
        $('.reject').click(function(){
-          if(!confirm('Are you sure?'))
+          if(!confirm('Do you want to reject this post?')) //Are u sure?
               return false;
       });
    

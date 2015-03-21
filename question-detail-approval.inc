@@ -61,9 +61,9 @@
 		$student_query = db_query('SELECT count(*) as cnt FROM users_extend  WHERE uid = '.$account.' AND grade = '.$grades.' AND FIND_IN_SET('.$subjects.',subject) > 0')->fetchObject();
         if((in_array('admin moderator',$user->roles))||((in_array('moderator',$user->roles)&&($student_query->cnt > 0))||(in_array('administrator',$user->roles))))
         {
-           $output.="<div class='col-12 content_down'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default'>Reject</a><br /><br /></div>";
+           $output.="<div class='space content_down'><a href='".$base_url."/forum/question/approval/".$question_id."/1' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/question/approval/".$question_id."/-1' class='btn btn-default reject'>Reject</a><br /><br /></div>";
         }
-        $output .= "</div><br></div>";
+        $output .= "</div><br><div class='space'><a href='../../question/approval' class='btn btn-default'>Go to question apprval</a></div><br /></div>";
         }
         else
         {

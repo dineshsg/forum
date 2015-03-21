@@ -5,7 +5,7 @@
 	    global $user;
 		$output ="";
 	  	if(in_array('administrator',$user->roles) || in_array('admin moderator',$user->roles) || in_array('moderator',$user->roles)|| in_array('admin moderator',$user->roles)){
-	 		$output.="<div class='col-12 text_right'><a href='forum/question/approval' class='btn btn-default'>Approve Question</a> <a href='forum/comment/approval' class='btn btn-default'>Approve Answers</a></div>";
+	 		$output.="<div class='col-12 text_right'><a href='forum/question/approval' class='btn btn-default content_down'>Approve Questions</a> <a href='forum/comment/approval' class='btn btn-default content_down'>Approve Answers</a></div>";
 		}
 		$output.="<h1 class='font-500 align-center'>Welcome</h1><br>";
         $search = drupal_get_form("forum_search");
@@ -16,7 +16,8 @@
         $count = 0;
 		foreach ($result as $row)
         {
-			$img=$row->grade_name."png";
+			 $img=$row->grade_name."png";
+			
 			switch($row->grade_name)
 			{
 					case "Pre-primary": 
@@ -31,20 +32,20 @@
 					case "High School" : 
 									$img="HighSchool.png";
 									break;	
-					default : $img=$row->grade_name."png";
+					/*default : $img=$row->grade_name."png";*/
+					default : $img="common.png";
 												
-			}
+			}			
+				
             if($count)
-            {
-			
+            {			
 			    $output .= "<div class='grade1 common' id= '".$row->id."' target='".$count."'>
                             <div class='thumb' style='background-image:url(./images/grades/".$img.");cursor:pointer;'>        	
         	                &nbsp; 
                             </div><div class='caption content-font common' id='title".$row->id."'  target='".$count."' style='cursor:pointer;'>".$row->grade_name."</div></div>";
             }
             else
-            {
-		
+            {		
 			    $output .= "<div class='grade1 common' id= '".$row->id."' target='".$count."'>
 			            	<div class='thumb' style='background-image:url(./images/grades/".$img.");cursor:pointer;' >       	
 			               	&nbsp; 
@@ -54,14 +55,14 @@
             $count++;		
         }
 		
-        $output .= "<div class='container_subjects col-12' style='clear:both;background:#efefef;! important;
-                    overflow:hidden;padding-top:15px;' id='container_subjects'  ></div>";
+        $output .= "<div class='container_subjects col-12' style='clear:both;
+                    overflow:hidden;padding-top:15px;' id='container_subjects'></div>"; //background:#efefef;! important;
         return $output;
     }
     
     function forum_search($form, &$form_state)
     {
-        $form = array();
+        $form = array();		
         $form['search'] = array(
 		    '#type' => 'textfield',
 		    '#size' => 30,
@@ -85,7 +86,8 @@
         $params = $param;
         if($params=='NULL')
         {
-            drupal_goto('forum/search');
+           // drupal_goto('forum/search');
+		    drupal_goto('forum');
         }
         else
         {
@@ -117,12 +119,14 @@
 		  {
 				$table_sort = $result->extend('TableSort')							
 						  		 ->orderByHeader($header);
-			   $pager = $table_sort->extend('PagerDefault')  
-                  		->limit(5);
+			    $pager = $table_sort->extend('PagerDefault') 
+								 ->limit(10); 
+                  				 /*->limit(5);*/
 		  }else{
           		 $pager = $result->extend('PagerDefault')                  
           		                 ->orderBy('id', 'DESC')
-                  	             ->limit(5);
+								 ->limit(10); 
+                  	             /*->limit(5);*/
 		  }
             $result = $pager->execute();
             if($result->rowCount() > 0)

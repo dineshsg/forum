@@ -572,4 +572,21 @@ if(($form_state['values']['name']=='')&&($form_state['values']['mail']=='')&&($f
         $stu_mail_id = db_query("SELECT mail FROM forum_questions fq, users u WHERE fq.id = '".$q_id."' AND fq.user_id = u.uid")->fetchObject();
         return $stu_mail_id->mail;
     }
+	 /*---- Code to be embedded Waiting approval------*/
+    function comment_status($comment_status)
+    {
+        if($comment_status=='0')
+        {
+            return "Waiting For Approval";
+        }
+        else if($comment_status=='1')
+        {
+            return "Approved";
+        }
+        else if($comment_status=='-1')
+        {
+            return "Rejected";
+        }
+    }
+    /*---------------------------------------------*/
 ?>

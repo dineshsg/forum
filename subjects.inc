@@ -30,9 +30,9 @@
         global $user;
         $query = "INSERT INTO `forum_subjects` (`subject_name`, `grade_id` ,`user_id`, `created_date`, `updated_date`) VALUES ('".$form_state['values']['subject_name']."', '".$form_state['values']['grade']."' , '".$user->uid."', (now()), (now()))";
         if(db_query($query)){
-			drupal_set_message('New Subject Added Successfully');
+			drupal_set_message('New Topic Added Successfully');
 		}else {
-			drupal_set_message('Error while Adding Subject , Please try again.');
+			drupal_set_message('Error while Adding Topic , Please try again.');
 		}
     }
     function _list_subjects()
@@ -100,12 +100,13 @@
     function subject_modify_form_submit($form, &$form_state)
     {
         global $user;
-        $cur_time = $mydate = date('Y-m-d', strtotime(date('d/m/Y')));
+        //$cur_time = $mydate = date('Y-m-d', strtotime(date('d/m/Y')));
+		$cur_time = $mydate = date('Y-m-d H:i:s');
         $query = "UPDATE `forum_subjects` SET `subject_name`='".$_POST['subjects_name_update']."', `user_id` = '".$user->uid."', `updated_date` = '".$cur_time."' WHERE id = '".arg(3)."'";
         if(db_query($query)){
-            drupal_set_message('New Grade Category Added Successfully');
+            drupal_set_message('Topic Category Updated Successfully');
 	    }else {
-	        drupal_set_message('Error while Adding Grade Category, Please try again.');
+	        drupal_set_message('Error while Updating Topic Category, Please try again.');
 	    }
 	    $form_state['redirect'] = 'admin/list_subjects';  
     }
@@ -132,11 +133,11 @@
             $result = "DELETE FROM forum_subjects WHERE id='".$grade_id."'";
             if(db_query($result))
             {
-                drupal_set_message('Subject has been sucessfully deleted');
+                drupal_set_message('Topic has been sucessfully deleted');
             }
             else
             {
-                drupal_set_message('Error while Deleting Subject Category, Please try again.');
+                drupal_set_message('Error while Deleting Topic Category, Please try again.');
             }
         }
         drupal_goto('admin/list_subjects');  

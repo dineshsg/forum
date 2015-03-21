@@ -51,11 +51,13 @@
     border-style:none !important;
     margin-left: auto !important;
     margin-right: auto !important;
+	
 }
 .img
 {
     width:18px;
 }
+
 /**************/
 /*  Define the background color for all the ODD background rows  
 	.table-striped tr:nth-child(odd){ 

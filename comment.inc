@@ -1,7 +1,7 @@
 <?php
 
 function _comment()
-    {
+{
         global $user;
         global $base_url;
         $account = $user;
@@ -12,7 +12,17 @@ function _comment()
         {
             $question_detail = db_query('SELECT grds.grade_name, sub.subject_name, ques.question, ques.user_id, ques.created, ques.id FROM forum_grades as grds, forum_subjects as sub, forum_questions as ques WHERE  ques.id = '.$question_id.' AND ques.grade_id = grds.id and ques.subject_id = sub.id');		
 		    $res_attachment = db_query('SELECT id,question_id,file_name from forum_question_attach where question_id='.$question_id.'');
-            $question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.status = 0 AND qr.question_id = '.$question_id.'');
+			
+			/** commented on 20Mar **/			
+           // $question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created FROM forum_question_reply as qr WHERE qr.status = 0 AND qr.question_id = '.$question_id.'');
+		   
+		   /** Start 20Mar added by Manjiri **/
+		   if(in_array('administrator',$user->roles))
+ 				$question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created,qr.status FROM forum_question_reply as qr WHERE (qr.status = 0 or qr.status= -1) AND qr.question_id = '.$question_id.'');
+		  else
+		   		$question_reply = db_query('SELECT qr.reply_message, qr.id,qr.user_id,qr.created,qr.status FROM forum_question_reply as qr WHERE qr.status = 0 AND qr.question_id = '.$question_id.'');
+		   /** End 20Mar added by Manjiri **/
+		   
             $output .= "<div>";
   	        while($rows = $question_detail->fetchObject()){
 			    $grade_name=$rows->grade_name;
@@ -48,6 +58,7 @@ function _comment()
         $question_detail1 = db_query('SELECT ques.grade_id, ques.subject_id, ques.user_id FROM forum_questions as ques WHERE ques.id = '.$question_id.'');
         $row = $question_detail1->fetchObject();
         $teacher_query = db_query("SELECT * FROM users_extend WHERE uid = '".$user->uid."' AND grade = '".$row->grade_id."' AND FIND_IN_SET('".$row->subject_id."', subject)");
+		
         if($question_reply->rowCount() > 0)
 	    {
             while($reply = $question_reply->fetchObject())
@@ -62,7 +73,14 @@ function _comment()
                             <span>Date - </span><strong><span>".date('F jS Y', strtotime($reply->created))."</span></strong>
                             </div>";
                 $output .= "<div id='form_{$reply->id}' class='form-wrapper'>";
-                $output .= "<div>Answer:</div><h5 class='font-300 font-black'><strong>".nl2br($reply->reply_message)."</strong></h5>";
+				
+				/**  20Mar added condition by Manjiri **/
+				if($reply->status== 0)
+                	$output .= "<div>Answer:</div><h5 class='font-300 font-black'><strong>".nl2br($reply->reply_message)."</strong></h5>"; /** Start 20Mar added by Manjiri **/
+				else
+					$output .= "<div>Rejected Answer:</div><h5 class='font-300 font-black'><strong>".nl2br($reply->reply_message)."</strong></h5>";	
+				/** End 20Mar added by Manjiri **/
+				
                 $output .= "</div>";
                 $output .= "</div><br>";
             }
@@ -70,13 +88,13 @@ function _comment()
         }
         if((in_array('admin moderator',$user->roles))||(in_array('moderator',$user->roles)) ||(in_array('administrator',$user->roles)))
         {
-           $output.="<div class='space'><a href='".$base_url."/forum/comment/approval/".$comment_id."/1/' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/comment/approval/".$comment_id."/-1/' class='btn btn-default'>Reject</a><br><br></div>"; 
+           $output.="<div class='space'><a href='".$base_url."/forum/comment/approval/".$comment_id."/1/' class='btn btn-default'>Accept</a> <a href='".$base_url."/forum/comment/approval/".$comment_id."/-1/' class='btn btn-default reject'>Reject</a><br><br></div>";
         }
         else
         {
                 $output .= "<div class='space'>";
                 $output .= drupal_render($form_question);
-		        $prev_url=base_path()."forum/comment/".$row->grade_id."/".$row->subject_id;
+		        $prev_url= base_path()."forum/comment/".$row->grade_id."/".$row->subject_id;
 		        $output .= "<a href='".$prev_url."'  class='btn btn-default content_down' > Go to ".$grade_name." &amp; ".$subject_name."</a><br><br>";
                 $output .= "</div>";
         }

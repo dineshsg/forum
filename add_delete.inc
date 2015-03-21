@@ -34,8 +34,7 @@ function multi_step_form($form, &$form_state, $operation = 'add', $folk_id = NUL
           '#type' => 'fieldset',
           '#weight' => 0,
           '#title' => t('Add New Person'),
-          '#description' => t('Add a person by
-          performing 2 steps. 1) Add the first and last name. 2) Choose the new
+          '#description' => t('Add a person by performing 2 steps. 1) Add the first and last name. 2) Choose the new
           person\'s favorite color.'),
       );
       $submit_value = 'Submit - Complete Form';
