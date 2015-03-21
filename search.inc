@@ -1,18 +1,16 @@
 <?php
-    function forum__questiona_search($form, &$form_state)
+    function forum_question_search($form, &$form_state)
     {
-        $form = array();
-        $form['tfname'] = array(
+        $form = array();		
+        $form['search'] = array(
 		    '#type' => 'textfield',
 		    '#size' => 30,
-		    '#title' => t('First Name'),
 		    '#required' => TRUE,
-		    '#default_value' => $fname,
-		    '#description' => "Please enter your First Name.",
 		);
 		$form["submit"] = array(
             '#type' => 'submit',
-            '#value' => "Search"
+            '#value' => "Search",
         );
+        return $form;
     }
 ?>

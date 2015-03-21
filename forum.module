@@ -139,6 +139,19 @@
 		    'page arguments' => array('extensions_allowed_form'),
 		    'access arguments' => array('Extensions allowed to upload Attachment'),
 	    );
+	    $items['forum/question/search/'] = array(
+		    'title' => 'Search',
+		    'page callback' => 'drupal_get_form',
+		    'page arguments' => array('forum_question_search'),
+		    'access callback' => TRUE,
+		    'file' => 'approval.inc',
+	    );
+	    $items['forum/question/search/result'] = array(
+		    'title' => 'Question Search Results',
+		    'page callback' => 'forum_question_search_result',
+		    'access callback' => TRUE,
+		    'file' => 'approval.inc',
+	    );
 	return $items;
 	}
     function forum_form()
